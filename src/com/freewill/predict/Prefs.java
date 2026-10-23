@@ -20,10 +20,6 @@ public final class Prefs {
     public static final String DOT = "dot";
     public static final String TRIGGER = "trigger_deg";  // tilt from flat (degrees) that writes the prediction
 
-    public static final String FAILSAFE_TEXT = "failsafe_text";
-    public static final String FAILSAFE_ON = "failsafe_on";
-    public static final String DEF_FAILSAFE = "The {obj3} is in the pocket.";
-
     public static final String DEF_TEMPLATE =
             "{first} has the {obj1}, {second} is holding the {obj2}, and the {obj3} is in the pocket.";
 
@@ -40,7 +36,6 @@ public final class Prefs {
             case OBJ2: def = "key"; break;
             case OBJ3: def = "ring"; break;
             case TEMPLATE: def = DEF_TEMPLATE; break;
-            case FAILSAFE_TEXT: def = DEF_FAILSAFE; break;
             default: def = "";
         }
         String v = p.getString(key, def);
@@ -65,8 +60,7 @@ public final class Prefs {
         boolean specFirst = spectatorFirst(state);
         String first = specFirst ? spectator : magician;
         String second = specFirst ? magician : spectator;
-        String tpl = state == PickupDetector.FAILSAFE ? str(p, FAILSAFE_TEXT) : str(p, TEMPLATE);
-        return tpl
+        return str(p, TEMPLATE)
                 .replace("{first}", first)
                 .replace("{second}", second)
                 .replace("{obj1}", str(p, OBJ1))
