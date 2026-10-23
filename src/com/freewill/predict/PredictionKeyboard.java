@@ -322,6 +322,10 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
                 if (!goBack()) requestHideSelf(0);
             } else if (after == 1) {
                 requestHideSelf(0);
+            } else if (after == 3) {
+                // Hide first, then hand the field back to the normal keyboard (stays hidden).
+                requestHideSelf(0);
+                main.postDelayed(this::goBack, 150);
             }
         }, 120);
     }

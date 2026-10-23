@@ -147,7 +147,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.6", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.7", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -281,12 +281,22 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
 
         c.addView(label("After the prediction appears"));
         Spinner after = new Spinner(this, Spinner.MODE_DROPDOWN);
-        String[] opts = {"Switch back to my keyboard", "Hide the keyboard", "Do nothing"};
+        // Shown order -> stored value (0 switch back, 1 hide, 2 nothing, 3 switch back and hide)
+        String[] opts = {"Switch back to my keyboard and hide it", "Switch back to my keyboard",
+                "Hide the keyboard", "Do nothing"};
+        final int[] codes = {3, 0, 1, 2};
         after.setAdapter(new DarkAdapter(opts));
-        after.setBackground(inputBackground(false));
+        android.graphics.drawable.LayerDrawable bgWithArrow = new android.graphics.drawable.LayerDrawable(
+                new android.graphics.drawable.Drawable[]{inputBackground(false), getDrawable(R.drawable.ic_chevron)});
+        bgWithArrow.setLayerGravity(1, Gravity.END | Gravity.CENTER_VERTICAL);
+        bgWithArrow.setLayerInsetEnd(1, dp(14));
+        after.setBackground(bgWithArrow);
         after.setPopupBackgroundDrawable(rounded(CARD, BORDER_STRONG, dp(1), dp(10)));
-        after.setSelection(prefs.getInt(Prefs.AFTER, 0));
-        after.setOnItemSelectedListener(new SimpleSelect(pos -> prefs.edit().putInt(Prefs.AFTER, pos).apply()));
+        after.setDropDownVerticalOffset(dp(52));
+        after.post(() -> after.setDropDownWidth(after.getWidth()));
+        int stored = prefs.getInt(Prefs.AFTER, 0);
+        for (int i = 0; i < codes.length; i++) if (codes[i] == stored) after.setSelection(i);
+        after.setOnItemSelectedListener(new SimpleSelect(pos -> prefs.edit().putInt(Prefs.AFTER, codes[pos]).apply()));
         after.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)));
         c.addView(after);
 
@@ -644,8 +654,10 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         @Override public View getView(int pos, View convert, ViewGroup parent) {
             TextView t = text(getItem(pos), 15, TEXT);
             t.setGravity(Gravity.CENTER_VERTICAL);
-            t.setPadding(dp(12), 0, dp(12), 0);
+            t.setPadding(dp(12), 0, dp(40), 0);
             t.setMinHeight(dp(48));
+            t.setSingleLine(true);
+            t.setEllipsize(android.text.TextUtils.TruncateAt.END);
             return t;
         }
 
