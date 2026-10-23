@@ -282,8 +282,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         main.post(() -> {
             updateDot(true);
             if (Prefs.get(this).getBoolean(Prefs.VIBRATE, true)) {
-                Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                if (vib != null) vib.vibrate(VibrationEffect.createOneShot(35, VibrationEffect.DEFAULT_AMPLITUDE));
+                Haptics.armedTap(this);
             }
         });
     }

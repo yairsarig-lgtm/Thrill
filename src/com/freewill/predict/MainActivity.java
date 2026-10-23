@@ -147,7 +147,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.7", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.8", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -300,7 +300,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         after.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)));
         c.addView(after);
 
-        c.addView(toggle("Buzz when armed", Prefs.VIBRATE, true));
+        c.addView(toggle("Silent tap when armed", Prefs.VIBRATE, true));
 
         LinearLayout tr = row();
         tr.setPadding(0, dp(14), 0, 0);
@@ -429,8 +429,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         main.post(() -> {
             lastState = -1;
             if (prefs.getBoolean(Prefs.VIBRATE, true)) {
-                Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                if (vib != null) vib.vibrate(VibrationEffect.createOneShot(35, VibrationEffect.DEFAULT_AMPLITUDE));
+                Haptics.armedTap(this);
             }
         });
     }
