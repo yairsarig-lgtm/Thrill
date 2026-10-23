@@ -147,7 +147,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.9", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.11", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
