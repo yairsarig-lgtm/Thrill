@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     private View statusDiamond;
     private TextView statusTitle, statusSub;
     private TextView statusButton;
-    private EditText templateField;
+    private EditText templateField, activeField;
     private TextView testPhase, testDesc, testResult, testValues;
     private final List<TextView> previews = new ArrayList<>();
     private int lastState = -1;
@@ -147,7 +147,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.9", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.10", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -222,6 +222,14 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         LinearLayout f = field("Prediction text", Prefs.TEMPLATE, true, false);
         templateField = (EditText) f.getChildAt(1);
         c.addView(f);
+        LinearLayout fs = field("Fail-safe text (held flat)", Prefs.FAILSAFE_TEXT, true, true);
+        fs.setPadding(0, dp(12), 0, 0);
+        final EditText failsafeField = (EditText) fs.getChildAt(1);
+        failsafeField.setMinLines(2);
+        View.OnFocusChangeListener track = (v, has) -> { if (has) activeField = (EditText) v; };
+        templateField.setOnFocusChangeListener(track);
+        failsafeField.setOnFocusChangeListener(track);
+        activeField = templateField;
 
         // Placeholder chips: tap to insert at the cursor.
         FlowRow chips = new FlowRow(this, dp(8));
@@ -232,9 +240,9 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
             chip.setPadding(dp(12), dp(8), dp(12), dp(8));
             chip.setBackground(rounded(CHIP, 0, 0, dp(999)));
             chip.setOnClickListener(v -> {
-                int s = Math.max(templateField.getSelectionStart(), 0);
-                int e = Math.max(templateField.getSelectionEnd(), 0);
-                templateField.getText().replace(Math.min(s, e), Math.max(s, e), ph);
+                int s = Math.max(activeField.getSelectionStart(), 0);
+                int e = Math.max(activeField.getSelectionEnd(), 0);
+                activeField.getText().replace(Math.min(s, e), Math.max(s, e), ph);
             });
             chips.addView(chip);
         }
@@ -242,14 +250,18 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         TextView hint = text("{first} is whoever picks the phone up.", 12, MUTED);
         hint.setPadding(0, dp(10), 0, 0);
         c.addView(hint);
+        c.addView(fs);
+        TextView fsHint = text("Written instead when you lift the phone and hold it flat for a second.", 12, MUTED);
+        fsHint.setPadding(0, dp(8), 0, 0);
+        c.addView(fsHint);
         return c;
     }
 
     private View revealCard() {
         LinearLayout c = card(true);
         c.addView(heading("THE REVEAL"));
-        String[] who = {"SPECTATOR PICKS IT UP", "MAGICIAN PICKS IT UP"};
-        for (int i = 0; i < 2; i++) {
+        String[] who = {"SPECTATOR PICKS IT UP", "MAGICIAN PICKS IT UP", "HELD FLAT · FAIL-SAFE"};
+        for (int i = 0; i < who.length; i++) {
             LinearLayout box = new LinearLayout(this);
             box.setOrientation(LinearLayout.VERTICAL);
             box.setPadding(dp(14), dp(12), dp(14), dp(12));
@@ -301,6 +313,12 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         c.addView(after);
 
         c.addView(toggle("Silent tap when armed", Prefs.VIBRATE, true));
+        Switch fsw = (Switch) toggle("Fail-safe: lift and hold flat", Prefs.FAILSAFE_ON, true);
+        fsw.setOnCheckedChangeListener((b, v) -> {
+            prefs.edit().putBoolean(Prefs.FAILSAFE_ON, v).apply();
+            detector.setFailsafeEnabled(v);
+        });
+        c.addView(fsw);
 
         LinearLayout tr = row();
         tr.setPadding(0, dp(14), 0, 0);
@@ -414,6 +432,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
                 : "Turn on “Thrill” in your keyboard settings. Android warns about every keyboard; this one sends nothing.");
         statusButton.setText(on ? "Switch" : "Enable");
         detector.setTrigger(Prefs.trigger(prefs));
+        detector.setFailsafeEnabled(prefs.getBoolean(Prefs.FAILSAFE_ON, true));
         detector.start();
         main.post(ticker);
     }
@@ -448,6 +467,10 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
                 testPhase.setText("ARMED");
                 testDesc.setText("Face down and waiting. Pick it up to see which reveal fires.");
                 break;
+            case HELD:
+                testPhase.setText("HOLDING");
+                testDesc.setText("Lifted flat. Keep it level for a second for the fail-safe.");
+                break;
             case LIFTING:
                 testPhase.setText("RISING");
                 testDesc.setText("");
@@ -459,11 +482,12 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         }
         testResult.setText(lastState >= 0 ? Prefs.buildPrediction(prefs, lastState, "") : "");
         float[] g = detector.getGravity();
-        testValues.setText(String.format(Locale.US, "tilt %.0f° · x %.1f · y %.1f · z %.1f", detector.getTilt(), g[0], g[1], g[2]));
+        testValues.setText(String.format(Locale.US, "tilt %.0f° · motion %.2f · x %.1f · y %.1f · z %.1f", detector.getTilt(), detector.getMotion(), g[0], g[1], g[2]));
     }
 
     private void refreshPreviews() {
-        int[] states = {PickupDetector.FACE_SPECTATOR_TOP_UP, PickupDetector.FACE_MAGICIAN_TOP_UP};
+        int[] states = {PickupDetector.FACE_SPECTATOR_TOP_UP, PickupDetector.FACE_MAGICIAN_TOP_UP,
+                PickupDetector.FAILSAFE};
         for (int i = 0; i < previews.size(); i++) {
             previews.get(i).setText(Prefs.buildPrediction(prefs, states[i], ""));
         }

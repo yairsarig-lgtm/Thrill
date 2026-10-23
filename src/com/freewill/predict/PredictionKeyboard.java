@@ -234,6 +234,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         updateDot(false);
         keepScreenOn(true);
         detector.setTrigger(Prefs.trigger(Prefs.get(this)));
+        detector.setFailsafeEnabled(Prefs.get(this).getBoolean(Prefs.FAILSAFE_ON, true));
         detector.start();
     }
 
