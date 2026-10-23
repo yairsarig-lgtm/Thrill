@@ -1,0 +1,4 @@
+out/
+*.apk
+*.apk.unsigned
+signing-key.pem

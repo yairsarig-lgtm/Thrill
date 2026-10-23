@@ -1,0 +1,31 @@
+# Thrill
+
+A prediction keyboard for Android, built for a Free Will–style mentalism routine with a single, unambiguous prediction.
+
+## How it works
+
+1. Before the show, enter your name, the three objects and the prediction text in the Thrill app.
+2. Open any app with a text field, switch to the **Thrill** keyboard and type the spectator's name.
+3. Lay the phone face down with its **bottom pointing at you**. A short buzz means it's armed.
+4. When the phone is picked up, the keyboard detects who picked it up (whoever the screen ends up facing), replaces the name with the full prediction — that person's name first — and switches back to your normal keyboard.
+
+The prediction template uses `{first}`, `{second}`, `{obj1}`, `{obj2}`, `{obj3}` (also `{spectator}` and `{magician}`).
+
+## Project layout
+
+- `src/com/freewill/predict/`
+  - `PredictionKeyboard.java` — the keyboard (input method) that injects the prediction
+  - `PickupDetector.java` — gravity + rotation-vector logic for arming and pickup detection
+  - `MainActivity.java` — settings and rehearsal screen
+  - `Prefs.java` — settings and prediction building
+- `res/`, `assets/fonts/` — icon, hero images, Cinzel font
+- `design/` — logo and icon source images
+- `build.sh`, `tools/` — Gradle-free build: aapt2 → javac → d8 → align + APK Signature Scheme v2
+
+## Building
+
+`build.sh` expects a tools folder (`TOOLS=...`) containing `aapt2`, `android.jar` (API 29+), `d8.jar` with its dependency jars in `lib/`, plus Python 3 with `cryptography`. It writes `FreeWill.apk`.
+
+Signing uses `signing-key.pem` in the project folder (created automatically on first build). **It is not committed.** Keep your own copy safe: updates only install over an existing install when signed with the same key.
+
+Requires Android 8.0+ and a phone with a gyroscope.
