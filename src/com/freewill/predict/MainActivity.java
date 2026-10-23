@@ -147,7 +147,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.8", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.9", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -312,8 +312,8 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         c.addView(tr);
 
         SeekBar trig = new SeekBar(this);
-        trig.setMax(40); // 5.0 .. 9.0 m/s²
-        trig.setProgress(Math.round((Prefs.trigger(prefs) - 5f) * 10));
+        trig.setMax(30); // 10° .. 40°
+        trig.setProgress(Math.round(Prefs.trigger(prefs) - 10f));
         trig.setProgressTintList(ColorStateList.valueOf(CRIMSON));
         trig.setThumbTintList(ColorStateList.valueOf(ACCENT));
         trig.setProgressBackgroundTintList(ColorStateList.valueOf(BORDER_STRONG));
@@ -321,7 +321,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         tv.setText(degrees(Prefs.trigger(prefs)));
         trig.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar s, int p, boolean u) {
-                float t = 5f + p / 10f;
+                float t = 10f + p;
                 prefs.edit().putFloat(Prefs.TRIGGER, t).apply();
                 detector.setTrigger(t);
                 tv.setText(degrees(t));
@@ -459,7 +459,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         }
         testResult.setText(lastState >= 0 ? Prefs.buildPrediction(prefs, lastState, "") : "");
         float[] g = detector.getGravity();
-        testValues.setText(String.format(Locale.US, "x %.1f · y %.1f · z %.1f", g[0], g[1], g[2]));
+        testValues.setText(String.format(Locale.US, "tilt %.0f° · x %.1f · y %.1f · z %.1f", detector.getTilt(), g[0], g[1], g[2]));
     }
 
     private void refreshPreviews() {
@@ -479,8 +479,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     }
 
     private String degrees(float t) {
-        double deg = Math.toDegrees(Math.asin(Math.min(1.0, t / 9.81)));
-        return String.format(Locale.US, "%.0f°", deg);
+        return String.format(Locale.US, "%.0f°", t);
     }
 
     // ---------------------------------------------------------------- building blocks

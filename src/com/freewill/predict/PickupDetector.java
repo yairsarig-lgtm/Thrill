@@ -38,9 +38,12 @@ public class PickupDetector implements SensorEventListener {
         void onPickup(int state);
     }
 
-    private static final float FACE_DOWN_Z = -8.3f;   // gravity z when lying screen-down
-    private static final float LIFT_Z = -6.5f;        // left the table
+    // All angles are the tilt away from lying flat, screen down.
+    private static final float ARM_MAX_DEG = 10f;      // counts as lying face down
+    private static final float REST_DEG = 4f;          // settled back down
+    private static final float LIFT_DEG = 6f;          // one end has started to rise
     private static final long ARM_MS = 1200;
+    private static final long HOLD_MS = 40;            // tilt must hold this long (ignores bumps)
 
     private final SensorManager sm;
     private final Sensor gravitySensor;
@@ -48,7 +51,8 @@ public class PickupDetector implements SensorEventListener {
     private final Sensor rotSensor;
     private final Listener listener;
 
-    private float trigger = 7.0f;
+    private float triggerDeg = 15f;
+    private long overSince = -1;
     private final float[] g = new float[3];
     private final float[] rot = new float[9];
     private boolean haveRot;
@@ -73,7 +77,8 @@ public class PickupDetector implements SensorEventListener {
 
     public boolean hasRotationSensor() { return rotSensor != null; }
 
-    public void setTrigger(float t) { trigger = t; }
+    /** Tilt, in degrees from flat, at which the prediction is written. */
+    public void setTrigger(float degrees) { triggerDeg = degrees; }
 
     /** If true, after firing it waits for the phone to go face down again and re-arms (test mode). */
     public void setRearmAfterFire(boolean b) { rearmAfterFire = b; }
@@ -138,13 +143,23 @@ public class PickupDetector implements SensorEventListener {
         step();
     }
 
+    /** Degrees the phone is tilted away from lying flat on its screen (0 = flat face down). */
+    private float tilt() {
+        float n = (float) Math.sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+        if (n < 1f) return 90f;
+        double c = Math.max(-1.0, Math.min(1.0, -g[2] / n));
+        return (float) Math.toDegrees(Math.acos(c));
+    }
+
+    public float getTilt() { return tilt(); }
+
     private void step() {
         long now = SystemClock.uptimeMillis();
-        boolean faceDown = g[2] < FACE_DOWN_Z;
+        float t = tilt();
 
         switch (phase) {
             case WAITING:
-                if (faceDown) {
+                if (t < ARM_MAX_DEG) {
                     if (faceDownSince < 0) faceDownSince = now;
                     if (now - faceDownSince >= ARM_MS) {
                         captureReference();
@@ -157,27 +172,33 @@ public class PickupDetector implements SensorEventListener {
                 break;
 
             case ARMED:
-                if (faceDown) {
+                if (t < REST_DEG) {
                     captureReference(); // keep the reference fresh while it rests
-                } else if (g[2] > LIFT_Z) {
+                } else if (t > LIFT_DEG) {
                     phase = Phase.LIFTING;
+                    overSince = -1;
                 }
                 break;
 
             case LIFTING:
-                if (faceDown) {             // put back down: still armed
+                if (t < REST_DEG) {         // put back down: still armed
                     phase = Phase.ARMED;
                     break;
                 }
-                if (Math.abs(g[1]) > trigger) {
-                    int state = currentState();
-                    phase = Phase.FIRED;
-                    listener.onPickup(state);
+                if (t >= triggerDeg) {
+                    if (overSince < 0) overSince = now;
+                    if (now - overSince >= HOLD_MS) {
+                        int state = currentState();
+                        phase = Phase.FIRED;
+                        listener.onPickup(state);
+                    }
+                } else {
+                    overSince = -1;
                 }
                 break;
 
             case FIRED:
-                if (rearmAfterFire && faceDown) {
+                if (rearmAfterFire && t < ARM_MAX_DEG) {
                     faceDownSince = now;
                     phase = Phase.WAITING;
                     listener.onDisarmed();

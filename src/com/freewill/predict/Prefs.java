@@ -18,7 +18,7 @@ public final class Prefs {
     public static final String AFTER = "after";          // 0 switch back, 1 hide, 2 nothing
     public static final String VIBRATE = "vibrate";
     public static final String DOT = "dot";
-    public static final String TRIGGER = "trigger";      // tilt trigger, m/s^2 on the long axis
+    public static final String TRIGGER = "trigger_deg";  // tilt from flat (degrees) that writes the prediction
 
     public static final String DEF_TEMPLATE =
             "{first} has the {obj1}, {second} is holding the {obj2}, and the {obj3} is in the pocket.";
@@ -49,7 +49,7 @@ public final class Prefs {
     }
 
     public static float trigger(SharedPreferences p) {
-        return p.getFloat(TRIGGER, 7.0f);
+        return p.getFloat(TRIGGER, 15f);
     }
 
     /** Builds the final prediction text for a pickup state. */
