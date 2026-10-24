@@ -112,7 +112,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         body.addView(playersCard());
         body.addView(prophecyCard());
         body.addView(revealCard());
-        body.addView(sixCard());
+        body.addView(expertCard());
         body.addView(vanishCard());
         body.addView(rehearsalCard());
 
@@ -151,7 +151,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.12", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.13", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -223,13 +223,14 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     private View prophecyCard() {
         LinearLayout c = card(true);
         c.addView(heading("THE PROPHECY"));
-        c.addView(subtitle("Routine 1 · type the name, or the name + 1. Object 3 is the forced one."));
+        c.addView(subtitle("Shared by both reveals."));
         LinearLayout f = field("Prediction text", Prefs.TEMPLATE, true, false);
         templateField = (EditText) f.getChildAt(1);
         c.addView(f);
 
         c.addView(chips(templateField, new String[]{"{first}", "{second}", "{obj1}", "{obj2}", "{obj3}"}));
-        TextView hint = text("{first} is whoever picks the phone up.", 12, MUTED);
+        TextView hint = text("Normal reveal: {first} is whoever picks the phone up and {obj3} is the forced object. "
+                + "Expert reveal: {first} is the spectator, {second} you, and the objects move to match the pickup.", 12, MUTED);
         hint.setPadding(0, dp(10), 0, 0);
         c.addView(hint);
         return c;
@@ -238,6 +239,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     private View revealCard() {
         LinearLayout c = card(true);
         c.addView(heading("THE REVEAL"));
+        c.addView(subtitle("Routine 1 · type the name, or the name + 1. Object 3 is forced."));
         String[] who = {"SPECTATOR PICKS IT UP", "MAGICIAN PICKS IT UP"};
         for (int i = 0; i < 2; i++) {
             LinearLayout box = new LinearLayout(this);
@@ -265,36 +267,26 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         return c;
     }
 
-    private View sixCard() {
+    private View expertCard() {
         LinearLayout c = card(true);
-        c.addView(heading("THE SIX"));
-        c.addView(subtitle("Routine 2 · type the name + 2. Every arrangement of the three objects."));
-        LinearLayout f = field("Prediction text", Prefs.TEMPLATE2, true, false);
-        EditText tpl = (EditText) f.getChildAt(1);
-        c.addView(f);
-        c.addView(chips(tpl, new String[]{"{spectator}", "{magician}", "{s_obj}", "{m_obj}",
-                "{place_obj}", "{place}"}));
-        TextView hint = text("{s_obj} the spectator's object · {m_obj} yours · {place_obj} the one in the place.", 12, MUTED);
-        hint.setPadding(0, dp(10), 0, dp(12));
-        c.addView(hint);
-        c.addView(field("Place", Prefs.PLACE, false, false));
+        c.addView(heading("THE EXPERT REVEAL"));
+        c.addView(subtitle("Routine 2 · type the name + 2. No force: the pickup covers every arrangement."));
 
         // Pause length
         LinearLayout pr = row();
-        pr.setPadding(0, dp(16), 0, 0);
         pr.addView(text("Pause length", 14, TEXT), weight(1));
         final TextView pv = text("", 14, ACCENT);
         pv.setTypeface(Typeface.DEFAULT_BOLD);
         pr.addView(pv);
         c.addView(pr);
         SeekBar pause = new SeekBar(this);
-        pause.setMax(10); // 0.5 .. 1.5 s
-        pause.setProgress((int) Math.round((Prefs.pauseMs(prefs) - 500) / 100.0));
+        pause.setMax(8); // 0.2 .. 1.0 s
+        pause.setProgress((int) Math.round((Prefs.pauseMs(prefs) - 200) / 100.0));
         tintSlider(pause);
         pv.setText(seconds(Prefs.pauseMs(prefs)));
         pause.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar sb, int p, boolean u) {
-                long ms = 500 + p * 100L;
+                long ms = 200 + p * 100L;
                 prefs.edit().putLong(Prefs.PAUSE_MS, ms).apply();
                 detector.setPauseMs(ms);
                 pv.setText(seconds(ms));
@@ -315,9 +307,8 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.topMargin = dp(i == 0 ? 16 : 10);
             box.setLayoutParams(lp);
-            TextView label = text(Prefs.SIX_NAMES[i], 11, ACCENT);
+            TextView label = text(Prefs.SIX_NAMES[i], 11, MUTED);
             label.setLetterSpacing(0.12f);
-            label.setTypeface(Typeface.DEFAULT_BOLD);
             box.addView(label);
             TextView sp = text("", 15, TEXT);
             sp.setTypeface(cinzel);
@@ -454,7 +445,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         pills.setPadding(0, dp(12), 0, 0);
         for (int i = 0; i < 2; i++) {
             final int r = i + 1;
-            TextView pill = text("ROUTINE " + r, 12, TEXT);
+            TextView pill = text(r == 1 ? "NORMAL" : "EXPERT", 12, TEXT);
             pill.setTypeface(Typeface.DEFAULT_BOLD);
             pill.setLetterSpacing(0.1f);
             pill.setGravity(Gravity.CENTER);

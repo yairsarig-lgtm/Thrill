@@ -20,12 +20,8 @@ public final class Prefs {
     public static final String DOT = "dot";
     public static final String TRIGGER = "trigger_deg";  // tilt from flat (degrees) that writes the prediction
 
-    // Routine 2: the six
-    public static final String TEMPLATE2 = "template2";
-    public static final String PLACE = "place";
+    // Routine 2: the expert reveal
     public static final String PAUSE_MS = "pause_ms";
-    public static final String DEF_TEMPLATE2 =
-            "{spectator} has the {s_obj}, {magician} has the {m_obj}, and the {place_obj} is in the {place}.";
 
     /** Routine 2 outcomes, in the order shown in the app. */
     public static final String[] SIX_NAMES = {
@@ -60,8 +56,6 @@ public final class Prefs {
             case OBJ2: def = "key"; break;
             case OBJ3: def = "ring"; break;
             case TEMPLATE: def = DEF_TEMPLATE; break;
-            case TEMPLATE2: def = DEF_TEMPLATE2; break;
-            case PLACE: def = "glass"; break;
             default: def = "";
         }
         String v = p.getString(key, def);
@@ -79,7 +73,7 @@ public final class Prefs {
     }
 
     public static long pauseMs(SharedPreferences p) {
-        return p.getLong(PAUSE_MS, 1000L);
+        return Math.max(200L, Math.min(1000L, p.getLong(PAUSE_MS, 500L)));
     }
 
     /** Which of the six outcomes (0..5) a pickup means in routine 2. */
@@ -92,20 +86,25 @@ public final class Prefs {
         }
     }
 
-    /** Routine 2 prediction for outcome 0..5. */
+    /**
+     * Expert reveal for outcome 0..5, using the shared prophecy text: {first} is the spectator,
+     * {second} the magician, and {obj1}/{obj2}/{obj3} become the spectator's object, the
+     * magician's object and the one left in the place.
+     */
     public static String buildSix(SharedPreferences p, int outcome, String spectatorName) {
         String spectator = (spectatorName == null || spectatorName.trim().isEmpty())
                 ? str(p, SPECTATOR_FALLBACK) : spectatorName.trim();
         String magician = str(p, MAGICIAN);
         String[] objs = {str(p, OBJ1), str(p, OBJ2), str(p, OBJ3)};
         int[] m = SIX[outcome];
-        return str(p, TEMPLATE2)
+        return str(p, TEMPLATE)
+                .replace("{first}", spectator)
+                .replace("{second}", magician)
+                .replace("{obj1}", objs[m[0]])
+                .replace("{obj2}", objs[m[1]])
+                .replace("{obj3}", objs[m[2]])
                 .replace("{spectator}", spectator)
-                .replace("{magician}", magician)
-                .replace("{s_obj}", objs[m[0]])
-                .replace("{m_obj}", objs[m[1]])
-                .replace("{place_obj}", objs[m[2]])
-                .replace("{place}", str(p, PLACE));
+                .replace("{magician}", magician);
     }
 
     /** The prediction for a routine (1 or 2) and a pickup. */

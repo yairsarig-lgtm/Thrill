@@ -15,10 +15,10 @@ The prediction template uses `{first}`, `{second}`, `{obj1}`, `{obj2}`, `{obj3}`
 
 Type the routine number straight after the name; it is removed before the prediction is written.
 
-- **Routine 1 – Free Will** (`Noa` or `Noa1`): object 3 is forced; whoever picks the phone up is named first.
-- **Routine 2 – The Six** (`Noa2`): no force. The edge that rises first (seen from the magician's seat), plus an optional pause, picks one of six arrangements:
+- **Normal reveal** (`Noa` or `Noa1`): object 3 is forced; whoever picks the phone up is `{first}`.
+- **Expert reveal** (`Noa2`): no force. Uses the same prophecy text, with `{first}` = spectator, `{second}` = magician and `{obj1}`/`{obj2}`/`{obj3}` = the spectator's object, the magician's object and the one left over. The edge that rises first (seen from the magician's seat), plus an optional pause, picks one of six arrangements:
 
-| Lift | Spectator | Magician | Place |
+| Lift | Spectator `{obj1}` | Magician `{obj2}` | Left over `{obj3}` |
 |---|---|---|---|
 | Front | obj1 | obj2 | obj3 |
 | Front + pause | obj1 | obj3 | obj2 |
@@ -27,7 +27,7 @@ Type the routine number straight after the name; it is removed before the predic
 | Right | obj3 | obj2 | obj1 |
 | Left | obj2 | obj3 | obj1 |
 
-The pause is made early in the lift: raise the edge slightly, hold still for the pause length (a silent tap confirms it), then finish the pickup.
+The pause is made early in the lift: raise the edge slightly, hold still for the pause length, 0.2–1.0 s (a silent tap confirms it), then finish the pickup.
 
 ## Project layout
 
