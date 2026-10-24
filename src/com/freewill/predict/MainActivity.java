@@ -65,7 +65,10 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     private EditText templateField;
     private TextView testPhase, testDesc, testResult, testValues;
     private final List<TextView> previews = new ArrayList<>();
-    private int lastState = -1;
+    private PickupDetector.Pickup lastPickup;
+    private int rehearseRoutine = 1;
+    private final List<TextView> sixPreviews = new ArrayList<>();
+    private final TextView[] routinePills = new TextView[2];
 
     private final Runnable ticker = new Runnable() {
         @Override public void run() {
@@ -109,6 +112,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         body.addView(playersCard());
         body.addView(prophecyCard());
         body.addView(revealCard());
+        body.addView(sixCard());
         body.addView(vanishCard());
         body.addView(rehearsalCard());
 
@@ -147,7 +151,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.11", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.12", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -211,7 +215,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         r2.addView(gap());
         r2.addView(field("Object 2", Prefs.OBJ2, false, false), weight(1));
         r2.addView(gap());
-        r2.addView(field("Forced", Prefs.OBJ3, false, true), weight(1));
+        r2.addView(field("Object 3", Prefs.OBJ3, false, false), weight(1));
         c.addView(r2);
         return c;
     }
@@ -219,26 +223,12 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     private View prophecyCard() {
         LinearLayout c = card(true);
         c.addView(heading("THE PROPHECY"));
+        c.addView(subtitle("Routine 1 · type the name, or the name + 1. Object 3 is the forced one."));
         LinearLayout f = field("Prediction text", Prefs.TEMPLATE, true, false);
         templateField = (EditText) f.getChildAt(1);
         c.addView(f);
 
-        // Placeholder chips: tap to insert at the cursor.
-        FlowRow chips = new FlowRow(this, dp(8));
-        chips.setPadding(0, dp(12), 0, 0);
-        for (String ph : new String[]{"{first}", "{second}", "{obj1}", "{obj2}", "{obj3}"}) {
-            TextView chip = text(ph, 12, ACCENT);
-            chip.setTypeface(Typeface.DEFAULT_BOLD);
-            chip.setPadding(dp(12), dp(8), dp(12), dp(8));
-            chip.setBackground(rounded(CHIP, 0, 0, dp(999)));
-            chip.setOnClickListener(v -> {
-                int s = Math.max(templateField.getSelectionStart(), 0);
-                int e = Math.max(templateField.getSelectionEnd(), 0);
-                templateField.getText().replace(Math.min(s, e), Math.max(s, e), ph);
-            });
-            chips.addView(chip);
-        }
-        c.addView(chips);
+        c.addView(chips(templateField, new String[]{"{first}", "{second}", "{obj1}", "{obj2}", "{obj3}"}));
         TextView hint = text("{first} is whoever picks the phone up.", 12, MUTED);
         hint.setPadding(0, dp(10), 0, 0);
         c.addView(hint);
@@ -273,6 +263,111 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         rule.setPadding(0, dp(10), 0, 0);
         c.addView(rule);
         return c;
+    }
+
+    private View sixCard() {
+        LinearLayout c = card(true);
+        c.addView(heading("THE SIX"));
+        c.addView(subtitle("Routine 2 · type the name + 2. Every arrangement of the three objects."));
+        LinearLayout f = field("Prediction text", Prefs.TEMPLATE2, true, false);
+        EditText tpl = (EditText) f.getChildAt(1);
+        c.addView(f);
+        c.addView(chips(tpl, new String[]{"{spectator}", "{magician}", "{s_obj}", "{m_obj}",
+                "{place_obj}", "{place}"}));
+        TextView hint = text("{s_obj} the spectator's object · {m_obj} yours · {place_obj} the one in the place.", 12, MUTED);
+        hint.setPadding(0, dp(10), 0, dp(12));
+        c.addView(hint);
+        c.addView(field("Place", Prefs.PLACE, false, false));
+
+        // Pause length
+        LinearLayout pr = row();
+        pr.setPadding(0, dp(16), 0, 0);
+        pr.addView(text("Pause length", 14, TEXT), weight(1));
+        final TextView pv = text("", 14, ACCENT);
+        pv.setTypeface(Typeface.DEFAULT_BOLD);
+        pr.addView(pv);
+        c.addView(pr);
+        SeekBar pause = new SeekBar(this);
+        pause.setMax(10); // 0.5 .. 1.5 s
+        pause.setProgress((int) Math.round((Prefs.pauseMs(prefs) - 500) / 100.0));
+        tintSlider(pause);
+        pv.setText(seconds(Prefs.pauseMs(prefs)));
+        pause.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar sb, int p, boolean u) {
+                long ms = 500 + p * 100L;
+                prefs.edit().putLong(Prefs.PAUSE_MS, ms).apply();
+                detector.setPauseMs(ms);
+                pv.setText(seconds(ms));
+            }
+            public void onStartTrackingTouch(SeekBar sb) {}
+            public void onStopTrackingTouch(SeekBar sb) {}
+        });
+        c.addView(pause);
+        c.addView(text("Lift the edge slightly and hold still. A silent tap confirms the pause; then finish the pickup.", 12, MUTED));
+
+        // The six outcomes
+        for (int i = 0; i < 6; i++) {
+            LinearLayout box = new LinearLayout(this);
+            box.setOrientation(LinearLayout.VERTICAL);
+            box.setPadding(dp(14), dp(12), dp(14), dp(12));
+            box.setBackground(rounded(BG, BORDER, dp(1), dp(10)));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.topMargin = dp(i == 0 ? 16 : 10);
+            box.setLayoutParams(lp);
+            TextView label = text(Prefs.SIX_NAMES[i], 11, ACCENT);
+            label.setLetterSpacing(0.12f);
+            label.setTypeface(Typeface.DEFAULT_BOLD);
+            box.addView(label);
+            TextView sp = text("", 15, TEXT);
+            sp.setTypeface(cinzel);
+            sp.setLineSpacing(0, 1.3f);
+            sp.setPadding(0, dp(6), 0, 0);
+            sixPreviews.add(sp);
+            box.addView(sp);
+            c.addView(box);
+        }
+        TextView rule = text("Edges as seen from your seat, phone face down, bottom pointing at you.", 12, MUTED);
+        rule.setPadding(0, dp(10), 0, 0);
+        c.addView(rule);
+        return c;
+    }
+
+    private TextView subtitle(String s) {
+        TextView t = text(s, 12, MUTED);
+        t.setPadding(0, 0, 0, dp(14));
+        t.setLineSpacing(0, 1.2f);
+        return t;
+    }
+
+    /** Placeholder chips: tap to insert at the cursor of the given field. */
+    private View chips(EditText target, String[] phs) {
+        FlowRow row = new FlowRow(this, dp(8));
+        row.setPadding(0, dp(12), 0, 0);
+        for (String ph : phs) {
+            TextView chip = text(ph, 12, ACCENT);
+            chip.setTypeface(Typeface.DEFAULT_BOLD);
+            chip.setPadding(dp(12), dp(8), dp(12), dp(8));
+            chip.setBackground(rounded(CHIP, 0, 0, dp(999)));
+            chip.setOnClickListener(v -> {
+                int a = Math.max(target.getSelectionStart(), 0);
+                int b = Math.max(target.getSelectionEnd(), 0);
+                target.getText().replace(Math.min(a, b), Math.max(a, b), ph);
+            });
+            row.addView(chip);
+        }
+        return row;
+    }
+
+    private void tintSlider(SeekBar sb) {
+        sb.setProgressTintList(ColorStateList.valueOf(CRIMSON));
+        sb.setThumbTintList(ColorStateList.valueOf(ACCENT));
+        sb.setProgressBackgroundTintList(ColorStateList.valueOf(BORDER_STRONG));
+        sb.setPadding(dp(4), dp(14), dp(4), dp(14));
+    }
+
+    private String seconds(long ms) {
+        return String.format(Locale.US, "%.1f s", ms / 1000.0);
     }
 
     private View vanishCard() {
@@ -354,6 +449,33 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         centered(h, 0.17f);
         c.addView(h);
 
+        LinearLayout pills = row();
+        pills.setGravity(Gravity.CENTER);
+        pills.setPadding(0, dp(12), 0, 0);
+        for (int i = 0; i < 2; i++) {
+            final int r = i + 1;
+            TextView pill = text("ROUTINE " + r, 12, TEXT);
+            pill.setTypeface(Typeface.DEFAULT_BOLD);
+            pill.setLetterSpacing(0.1f);
+            pill.setGravity(Gravity.CENTER);
+            pill.setMinHeight(dp(44));
+            pill.setPadding(dp(18), 0, dp(18), 0);
+            pill.setOnClickListener(v -> {
+                rehearseRoutine = r;
+                lastPickup = null;
+                refreshPills();
+            });
+            LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            plp.setMargins(dp(5), 0, dp(5), 0);
+            pills.addView(pill, plp);
+            routinePills[i] = pill;
+        }
+        pills.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        c.addView(pills);
+        refreshPills();
+
         ImageView mark = new ImageView(this);
         mark.setImageResource(R.drawable.t_mark);
         mark.setAlpha(0.9f);
@@ -402,6 +524,15 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         return c;
     }
 
+    private void refreshPills() {
+        for (int i = 0; i < 2; i++) {
+            boolean on = rehearseRoutine == i + 1;
+            routinePills[i].setTextColor(on ? TEXT : MUTED);
+            routinePills[i].setBackground(on ? rounded(CRIMSON, 0, 0, dp(999))
+                    : rounded(0x00000000, BORDER_STRONG, dp(1), dp(999)));
+        }
+    }
+
     // ---------------------------------------------------------------- lifecycle
 
     @Override
@@ -414,6 +545,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
                 : "Turn on “Thrill” in your keyboard settings. Android warns about every keyboard; this one sends nothing.");
         statusButton.setText(on ? "Switch" : "Enable");
         detector.setTrigger(Prefs.trigger(prefs));
+        detector.setPauseMs(Prefs.pauseMs(prefs));
         detector.start();
         main.post(ticker);
     }
@@ -427,45 +559,65 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
 
     @Override public void onArmed() {
         main.post(() -> {
-            lastState = -1;
+            lastPickup = null;
             if (prefs.getBoolean(Prefs.VIBRATE, true)) {
                 Haptics.armedTap(this);
             }
         });
     }
 
-    @Override public void onDisarmed() { main.post(() -> lastState = -1); }
+    @Override public void onDisarmed() { main.post(() -> lastPickup = null); }
 
-    @Override public void onPickup(int state) { main.post(() -> lastState = state); }
+    @Override public void onPaused() {
+        main.post(() -> {
+            if (rehearseRoutine == 2 && prefs.getBoolean(Prefs.VIBRATE, true)) Haptics.armedTap(this);
+        });
+    }
+
+    @Override public void onPickup(PickupDetector.Pickup pk) { main.post(() -> lastPickup = pk); }
 
     private void refreshTester() {
-        switch (detector.getPhase()) {
-            case WAITING:
-                testPhase.setText("WAITING");
-                testDesc.setText("Lay it face down, bottom pointing at you.");
-                break;
-            case ARMED:
-                testPhase.setText("ARMED");
-                testDesc.setText("Face down and waiting. Pick it up to see which reveal fires.");
-                break;
-            case LIFTING:
-                testPhase.setText("RISING");
-                testDesc.setText("");
-                break;
-            default:
-                testPhase.setText("REVEALED");
-                testDesc.setText(lastState >= 0 ? PickupDetector.stateName(lastState) : "");
-                break;
+        boolean six = rehearseRoutine == 2;
+        PickupDetector.Phase ph = detector.getPhase();
+        if (six && detector.isPaused() && (ph == PickupDetector.Phase.ARMED || ph == PickupDetector.Phase.LIFTING)) {
+            testPhase.setText("PAUSED");
+            testDesc.setText("Pause registered. Finish the pickup.");
+        } else {
+            switch (ph) {
+                case WAITING:
+                    testPhase.setText("WAITING");
+                    testDesc.setText("Lay it face down, bottom pointing at you.");
+                    break;
+                case ARMED:
+                    testPhase.setText("ARMED");
+                    testDesc.setText(six ? "Lift an edge, or lift slightly and hold still for a pause."
+                            : "Face down and waiting. Pick it up to see which reveal fires.");
+                    break;
+                case LIFTING:
+                    testPhase.setText("RISING");
+                    testDesc.setText("");
+                    break;
+                default:
+                    testPhase.setText("REVEALED");
+                    testDesc.setText(lastPickup == null ? "" : six
+                            ? PickupDetector.edgeName(lastPickup.edge, lastPickup.paused)
+                            : PickupDetector.stateName(lastPickup.facing));
+                    break;
+            }
         }
-        testResult.setText(lastState >= 0 ? Prefs.buildPrediction(prefs, lastState, "") : "");
+        testResult.setText(lastPickup == null ? "" : Prefs.build(prefs, rehearseRoutine, lastPickup, ""));
         float[] g = detector.getGravity();
-        testValues.setText(String.format(Locale.US, "tilt %.0f° · x %.1f · y %.1f · z %.1f", detector.getTilt(), g[0], g[1], g[2]));
+        testValues.setText(String.format(Locale.US, "tilt %.0f° · x %.1f · y %.1f · z %.1f",
+                detector.getTilt(), g[0], g[1], g[2]));
     }
 
     private void refreshPreviews() {
         int[] states = {PickupDetector.FACE_SPECTATOR_TOP_UP, PickupDetector.FACE_MAGICIAN_TOP_UP};
         for (int i = 0; i < previews.size(); i++) {
             previews.get(i).setText(Prefs.buildPrediction(prefs, states[i], ""));
+        }
+        for (int i = 0; i < sixPreviews.size(); i++) {
+            sixPreviews.get(i).setText(Prefs.buildSix(prefs, i, ""));
         }
     }
 

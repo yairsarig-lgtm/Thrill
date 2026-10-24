@@ -20,6 +20,30 @@ public final class Prefs {
     public static final String DOT = "dot";
     public static final String TRIGGER = "trigger_deg";  // tilt from flat (degrees) that writes the prediction
 
+    // Routine 2: the six
+    public static final String TEMPLATE2 = "template2";
+    public static final String PLACE = "place";
+    public static final String PAUSE_MS = "pause_ms";
+    public static final String DEF_TEMPLATE2 =
+            "{spectator} has the {s_obj}, {magician} has the {m_obj}, and the {place_obj} is in the {place}.";
+
+    /** Routine 2 outcomes, in the order shown in the app. */
+    public static final String[] SIX_NAMES = {
+            "FRONT", "FRONT · PAUSE", "BACK", "BACK · PAUSE", "RIGHT", "LEFT"};
+
+    /**
+     * Who gets which object in each of the six outcomes, as indexes of obj1..obj3:
+     * {spectator's object, magician's object, object in the place}.
+     */
+    private static final int[][] SIX = {
+            {0, 1, 2},   // front:          spectator 1, magician 2, place 3
+            {0, 2, 1},   // front + pause:  spectator 1, magician 3, place 2
+            {1, 0, 2},   // back:           spectator 2, magician 1, place 3
+            {2, 0, 1},   // back + pause:   spectator 3, magician 1, place 2
+            {2, 1, 0},   // right:          spectator 3, magician 2, place 1
+            {1, 2, 0},   // left:           spectator 2, magician 3, place 1
+    };
+
     public static final String DEF_TEMPLATE =
             "{first} has the {obj1}, {second} is holding the {obj2}, and the {obj3} is in the pocket.";
 
@@ -36,6 +60,8 @@ public final class Prefs {
             case OBJ2: def = "key"; break;
             case OBJ3: def = "ring"; break;
             case TEMPLATE: def = DEF_TEMPLATE; break;
+            case TEMPLATE2: def = DEF_TEMPLATE2; break;
+            case PLACE: def = "glass"; break;
             default: def = "";
         }
         String v = p.getString(key, def);
@@ -50,6 +76,42 @@ public final class Prefs {
 
     public static float trigger(SharedPreferences p) {
         return p.getFloat(TRIGGER, 15f);
+    }
+
+    public static long pauseMs(SharedPreferences p) {
+        return p.getLong(PAUSE_MS, 1000L);
+    }
+
+    /** Which of the six outcomes (0..5) a pickup means in routine 2. */
+    public static int sixOutcome(PickupDetector.Pickup pk) {
+        switch (pk.edge) {
+            case PickupDetector.EDGE_FRONT: return pk.paused ? 1 : 0;
+            case PickupDetector.EDGE_BACK: return pk.paused ? 3 : 2;
+            case PickupDetector.EDGE_RIGHT: return 4;
+            default: return 5;
+        }
+    }
+
+    /** Routine 2 prediction for outcome 0..5. */
+    public static String buildSix(SharedPreferences p, int outcome, String spectatorName) {
+        String spectator = (spectatorName == null || spectatorName.trim().isEmpty())
+                ? str(p, SPECTATOR_FALLBACK) : spectatorName.trim();
+        String magician = str(p, MAGICIAN);
+        String[] objs = {str(p, OBJ1), str(p, OBJ2), str(p, OBJ3)};
+        int[] m = SIX[outcome];
+        return str(p, TEMPLATE2)
+                .replace("{spectator}", spectator)
+                .replace("{magician}", magician)
+                .replace("{s_obj}", objs[m[0]])
+                .replace("{m_obj}", objs[m[1]])
+                .replace("{place_obj}", objs[m[2]])
+                .replace("{place}", str(p, PLACE));
+    }
+
+    /** The prediction for a routine (1 or 2) and a pickup. */
+    public static String build(SharedPreferences p, int routine, PickupDetector.Pickup pk, String name) {
+        if (routine == 2) return buildSix(p, sixOutcome(pk), name);
+        return buildPrediction(p, pk.facing, name);
     }
 
     /** Builds the final prediction text for a pickup state. */

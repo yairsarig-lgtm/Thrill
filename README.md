@@ -11,6 +11,24 @@ A prediction keyboard for Android, built for a Free Will–style mentalism routi
 
 The prediction template uses `{first}`, `{second}`, `{obj1}`, `{obj2}`, `{obj3}` (also `{spectator}` and `{magician}`).
 
+## Routines
+
+Type the routine number straight after the name; it is removed before the prediction is written.
+
+- **Routine 1 – Free Will** (`Noa` or `Noa1`): object 3 is forced; whoever picks the phone up is named first.
+- **Routine 2 – The Six** (`Noa2`): no force. The edge that rises first (seen from the magician's seat), plus an optional pause, picks one of six arrangements:
+
+| Lift | Spectator | Magician | Place |
+|---|---|---|---|
+| Front | obj1 | obj2 | obj3 |
+| Front + pause | obj1 | obj3 | obj2 |
+| Back | obj2 | obj1 | obj3 |
+| Back + pause | obj3 | obj1 | obj2 |
+| Right | obj3 | obj2 | obj1 |
+| Left | obj2 | obj3 | obj1 |
+
+The pause is made early in the lift: raise the edge slightly, hold still for the pause length (a silent tap confirms it), then finish the pickup.
+
 ## Project layout
 
 - `src/com/freewill/predict/`

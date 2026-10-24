@@ -11,12 +11,13 @@ import android.os.SystemClock;
  * Watches the phone lying face down and decides how it is picked up.
  *
  * Performance rule: the phone is placed face down with its BOTTOM pointing at the magician,
- * so its TOP points at the spectator. While it lies there the detector keeps a reference
- * of which world direction the top points to. When the phone is lifted and tilted past the
- * trigger angle, it reports two things:
- *   - top up or top down (from gravity along the phone's long axis)
- *   - whether the screen faces the spectator's side or the magician's side
- *     (screen normal compared with the stored "towards spectator" direction).
+ * so its TOP points at the spectator. When the phone is lifted and tilted past the trigger
+ * angle it reports a {@link Pickup}:
+ *   - facing: who the screen ends up facing (routine 1), from the rotation sensor and a
+ *     "towards spectator" reference stored while the phone rests;
+ *   - edge: which edge rose first, as seen from the magician's seat (routine 2);
+ *   - paused: whether the phone was held still, slightly lifted, for the pause time
+ *     before reaching the trigger angle (routine 2).
  */
 public class PickupDetector implements SensorEventListener {
 
@@ -25,9 +26,41 @@ public class PickupDetector implements SensorEventListener {
     public static final int FACE_MAGICIAN_TOP_UP = 2;
     public static final int FACE_MAGICIAN_TOP_DOWN = 3;
 
+    /** Edges as seen from the magician's seat. Front = the spectator's side. */
+    public static final int EDGE_FRONT = 0;
+    public static final int EDGE_BACK = 1;
+    public static final int EDGE_LEFT = 2;
+    public static final int EDGE_RIGHT = 3;
+
+    /** Everything known about one pickup. */
+    public static final class Pickup {
+        public final int facing;
+        public final int edge;
+        public final boolean paused;
+
+        public Pickup(int facing, int edge, boolean paused) {
+            this.facing = facing;
+            this.edge = edge;
+            this.paused = paused;
+        }
+
+        public boolean spectatorFacing() {
+            return facing == FACE_SPECTATOR_TOP_UP || facing == FACE_SPECTATOR_TOP_DOWN;
+        }
+    }
+
     public static String stateName(int s) {
         return (s == FACE_SPECTATOR_TOP_UP || s == FACE_SPECTATOR_TOP_DOWN)
                 ? "Picked up by the spectator" : "Picked up by the magician";
+    }
+
+    public static String edgeName(int edge, boolean paused) {
+        switch (edge) {
+            case EDGE_FRONT: return paused ? "Front edge · pause" : "Front edge";
+            case EDGE_BACK: return paused ? "Back edge · pause" : "Back edge";
+            case EDGE_LEFT: return "Left edge";
+            default: return "Right edge";
+        }
     }
 
     public enum Phase { WAITING, ARMED, LIFTING, FIRED }
@@ -35,15 +68,21 @@ public class PickupDetector implements SensorEventListener {
     public interface Listener {
         void onArmed();
         void onDisarmed();
-        void onPickup(int state);
+        void onPaused();
+        void onPickup(Pickup p);
     }
 
-    // All angles are the tilt away from lying flat, screen down.
+    // Absolute tilt away from lying flat, screen down.
     private static final float ARM_MAX_DEG = 10f;      // counts as lying face down
     private static final float REST_DEG = 4f;          // settled back down
     private static final float LIFT_DEG = 6f;          // one end has started to rise
     private static final long ARM_MS = 1200;
     private static final long HOLD_MS = 40;            // tilt must hold this long (ignores bumps)
+
+    // Lift measured from the resting position, so an uneven table doesn't matter.
+    private static final float PAUSE_MIN_LIFT = 3f;    // edge visibly off the table
+    private static final float PAUSE_TOLERANCE = 1.5f; // allowed drift while "still"
+    private static final float REST_LIFT = 2f;         // back down: forget any pause
 
     private final SensorManager sm;
     private final Sensor gravitySensor;
@@ -52,12 +91,19 @@ public class PickupDetector implements SensorEventListener {
     private final Listener listener;
 
     private float triggerDeg = 15f;
+    private long pauseMs = 1000;
     private long overSince = -1;
     private final float[] g = new float[3];
+    private final float[] rest = new float[3];
+    private boolean haveRest;
     private final float[] rot = new float[9];
     private boolean haveRot;
     private final float[] towardSpectator = new float[2]; // world horizontal unit vector
     private boolean haveRef;
+
+    private boolean paused;
+    private float anchorLift;
+    private long anchorSince = -1;
 
     private Phase phase = Phase.WAITING;
     private long faceDownSince = -1;
@@ -80,6 +126,9 @@ public class PickupDetector implements SensorEventListener {
     /** Tilt, in degrees from flat, at which the prediction is written. */
     public void setTrigger(float degrees) { triggerDeg = degrees; }
 
+    /** How long the phone must be held still, slightly lifted, to count as a pause. */
+    public void setPauseMs(long ms) { pauseMs = ms; }
+
     /** If true, after firing it waits for the phone to go face down again and re-arms (test mode). */
     public void setRearmAfterFire(boolean b) { rearmAfterFire = b; }
 
@@ -101,10 +150,14 @@ public class PickupDetector implements SensorEventListener {
         phase = Phase.WAITING;
         faceDownSince = -1;
         haveRef = false;
+        haveRest = false;
+        clearPause();
     }
 
     public Phase getPhase() { return phase; }
     public float[] getGravity() { return g; }
+    public float getTilt() { return tilt(); }
+    public boolean isPaused() { return paused; }
 
     /** Which pickup state the phone would report right now (for the live tester). */
     public int currentState() {
@@ -120,10 +173,20 @@ public class PickupDetector implements SensorEventListener {
             float nx = rot[2], ny = rot[5];
             return nx * towardSpectator[0] + ny * towardSpectator[1] > 0;
         }
-        // Fallback without a rotation sensor: assume a simple end-lift. Lifting the far (top)
-        // end leaves the screen facing the spectator, top up; lifting the near end leaves it
-        // facing the magician, top down.
+        // Fallback without a rotation sensor: assume a simple end-lift.
         return g[1] > 0;
+    }
+
+    /**
+     * Which edge has risen. Lying face down with the top toward the spectator, the phone's
+     * +y axis points at the spectator and its +x axis at the magician's LEFT. The gravity
+     * reading along an axis grows when that end of the phone goes up.
+     */
+    private int currentEdge() {
+        float dx = g[0] - (haveRest ? rest[0] : 0f);
+        float dy = g[1] - (haveRest ? rest[1] : 0f);
+        if (Math.abs(dy) >= Math.abs(dx)) return dy > 0 ? EDGE_FRONT : EDGE_BACK;
+        return dx > 0 ? EDGE_LEFT : EDGE_RIGHT;
     }
 
     @Override
@@ -145,13 +208,48 @@ public class PickupDetector implements SensorEventListener {
 
     /** Degrees the phone is tilted away from lying flat on its screen (0 = flat face down). */
     private float tilt() {
-        float n = (float) Math.sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+        float n = norm(g);
         if (n < 1f) return 90f;
         double c = Math.max(-1.0, Math.min(1.0, -g[2] / n));
         return (float) Math.toDegrees(Math.acos(c));
     }
 
-    public float getTilt() { return tilt(); }
+    /** Degrees the phone has moved away from where it rested when armed. */
+    private float lift() {
+        if (!haveRest) return tilt();
+        float a = norm(g), b = norm(rest);
+        if (a < 1f || b < 1f) return 90f;
+        double c = (g[0] * rest[0] + g[1] * rest[1] + g[2] * rest[2]) / (a * b);
+        return (float) Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, c))));
+    }
+
+    private static float norm(float[] v) {
+        return (float) Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    }
+
+    private void clearPause() {
+        paused = false;
+        anchorSince = -1;
+    }
+
+    private void trackPause(long now, float t) {
+        float l = lift();
+        if (l < REST_LIFT) {               // resting: no pause yet
+            clearPause();
+            return;
+        }
+        if (paused || l < PAUSE_MIN_LIFT || t >= triggerDeg) {
+            anchorSince = -1;
+            return;
+        }
+        if (anchorSince < 0 || Math.abs(l - anchorLift) > PAUSE_TOLERANCE) {
+            anchorLift = l;
+            anchorSince = now;
+        } else if (now - anchorSince >= pauseMs) {
+            paused = true;
+            listener.onPaused();
+        }
+    }
 
     private void step() {
         long now = SystemClock.uptimeMillis();
@@ -163,6 +261,9 @@ public class PickupDetector implements SensorEventListener {
                     if (faceDownSince < 0) faceDownSince = now;
                     if (now - faceDownSince >= ARM_MS) {
                         captureReference();
+                        System.arraycopy(g, 0, rest, 0, 3);
+                        haveRest = true;
+                        clearPause();
                         phase = Phase.ARMED;
                         listener.onArmed();
                     }
@@ -172,8 +273,10 @@ public class PickupDetector implements SensorEventListener {
                 break;
 
             case ARMED:
-                if (t < REST_DEG) {
-                    captureReference(); // keep the reference fresh while it rests
+                trackPause(now, t);
+                if (t < REST_DEG && lift() < REST_LIFT) {
+                    captureReference(); // keep the references fresh while it rests
+                    for (int i = 0; i < 3; i++) rest[i] = 0.95f * rest[i] + 0.05f * g[i];
                 } else if (t > LIFT_DEG) {
                     phase = Phase.LIFTING;
                     overSince = -1;
@@ -181,6 +284,7 @@ public class PickupDetector implements SensorEventListener {
                 break;
 
             case LIFTING:
+                trackPause(now, t);
                 if (t < REST_DEG) {         // put back down: still armed
                     phase = Phase.ARMED;
                     break;
@@ -188,9 +292,9 @@ public class PickupDetector implements SensorEventListener {
                 if (t >= triggerDeg) {
                     if (overSince < 0) overSince = now;
                     if (now - overSince >= HOLD_MS) {
-                        int state = currentState();
+                        Pickup p = new Pickup(currentState(), currentEdge(), paused);
                         phase = Phase.FIRED;
-                        listener.onPickup(state);
+                        listener.onPickup(p);
                     }
                 } else {
                     overSince = -1;
@@ -200,6 +304,8 @@ public class PickupDetector implements SensorEventListener {
             case FIRED:
                 if (rearmAfterFire && t < ARM_MAX_DEG) {
                     faceDownSince = now;
+                    haveRest = false;
+                    clearPause();
                     phase = Phase.WAITING;
                     listener.onDisarmed();
                 }

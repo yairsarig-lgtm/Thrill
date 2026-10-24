@@ -70,6 +70,15 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         int p = dp(4);
         root.setPadding(p, dp(8), p, dp(10));
 
+        // Number row
+        LinearLayout nums = row();
+        nums.getLayoutParams().height = dp(46);
+        for (char ch : "1234567890".toCharArray()) {
+            String d = String.valueOf(ch);
+            nums.addView(key(d, 1f, keyBgSpecial, v -> type(d)));
+        }
+        root.addView(nums);
+
         // Row 1-2
         root.addView(letterRow(ROWS[0], 0));
         root.addView(letterRow(ROWS[1], 0.5f));
@@ -234,6 +243,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         updateDot(false);
         keepScreenOn(true);
         detector.setTrigger(Prefs.trigger(Prefs.get(this)));
+        detector.setPauseMs(Prefs.pauseMs(Prefs.get(this)));
         detector.start();
     }
 
@@ -293,11 +303,42 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
     }
 
     @Override
-    public void onPickup(int state) {
-        main.post(() -> reveal(state));
+    public void onPaused() {
+        // Lets the performer feel that the pause has registered (routine 2 only).
+        main.post(() -> {
+            if (Prefs.get(this).getBoolean(Prefs.VIBRATE, true) && parseRoutine(typed.toString()) == 2) {
+                Haptics.armedTap(this);
+            }
+        });
     }
 
-    private void reveal(int state) {
+    @Override
+    public void onPickup(PickupDetector.Pickup pk) {
+        main.post(() -> reveal(pk));
+    }
+
+    /** "Noa", "Noa1" or "Noa 1" = routine 1; "Noa2" = routine 2. Unknown numbers fall back to 1. */
+    static int parseRoutine(String typed) {
+        java.util.regex.Matcher m = TRAILING_NUMBER.matcher(typed);
+        if (!m.matches()) return 1;
+        try {
+            int r = Integer.parseInt(m.group(2));
+            return (r == 1 || r == 2) ? r : 1;
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
+
+    /** The name without the routine number. */
+    static String stripRoutine(String typed) {
+        java.util.regex.Matcher m = TRAILING_NUMBER.matcher(typed);
+        return m.matches() ? m.group(1) : typed;
+    }
+
+    private static final java.util.regex.Pattern TRAILING_NUMBER =
+            java.util.regex.Pattern.compile("^(.*?)\\s*(\\d+)\\s*$", java.util.regex.Pattern.DOTALL);
+
+    private void reveal(PickupDetector.Pickup pk) {
         if (fired) return;
         fired = true;
         detector.stop();
@@ -305,8 +346,9 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         if (ic == null) return;
 
         SharedPreferences p = Prefs.get(this);
-        String name = typed.toString();
-        String prediction = Prefs.buildPrediction(p, state, name);
+        String raw = typed.toString();
+        int routine = parseRoutine(raw);
+        String prediction = Prefs.build(p, routine, pk, stripRoutine(raw));
 
         ic.beginBatchEdit();
         if (typed.length() > 0) ic.deleteSurroundingText(typed.length(), 0);
