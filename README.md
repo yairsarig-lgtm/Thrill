@@ -9,16 +9,24 @@ A prediction keyboard for Android, built for a Free Will–style mentalism routi
 3. Lay the phone face down with its **bottom pointing at you**. A short buzz means it's armed.
 4. When the phone is picked up, the keyboard detects who picked it up (whoever the screen ends up facing), replaces the name with the full prediction — that person's name first — and switches back to your normal keyboard.
 
-The prediction template uses `{first}`, `{second}`, `{obj1}`, `{obj2}`, `{obj3}` (also `{spectator}` and `{magician}`).
+The prophecy text (shared by both reveals) uses these tags:
+
+- `{spectator}` – the name typed on the keyboard
+- `{magician}` – the magician's name
+- `{spectator's object}` – the object the spectator ends up holding
+- `{magician's object}` – the object the magician ends up holding
+- `{remaining object}` – the object left over (always Object 3 in the normal reveal)
+
+Old `{first}`/`{obj1}`-style text is converted automatically.
 
 ## Routines
 
 Type the routine number straight after the name; it is removed before the prediction is written.
 
-- **Normal reveal** (`Noa` or `Noa1`): object 3 is forced; whoever picks the phone up is `{first}`.
-- **Expert reveal** (`Noa2`): no force. Uses the same prophecy text, with `{first}` = spectator, `{second}` = magician and `{obj1}`/`{obj2}`/`{obj3}` = the spectator's object, the magician's object and the one left over. The edge that rises first (seen from the magician's seat), plus an optional pause, picks one of six arrangements:
+- **Normal reveal** (`Noa` or `Noa1`): Object 3 is forced; whoever picks the phone up gets Object 1, the other person Object 2.
+- **Expert reveal** (`Noa2`): no force. The edge that rises first (seen from the magician's seat), plus an optional pause, picks one of six arrangements:
 
-| Lift | Spectator `{obj1}` | Magician `{obj2}` | Left over `{obj3}` |
+| Lift | Spectator's object | Magician's object | Remaining object |
 |---|---|---|---|
 | Front | obj1 | obj2 | obj3 |
 | Front + pause | obj1 | obj3 | obj2 |

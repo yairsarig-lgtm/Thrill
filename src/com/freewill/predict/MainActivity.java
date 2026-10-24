@@ -151,7 +151,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("PREDICTION KEYBOARD · V0.13", 11, MUTED);
+        TextView sub = text("PREDICTION KEYBOARD · V0.14", 11, MUTED);
         centered(sub, 0.25f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -204,10 +204,12 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
     private View playersCard() {
         LinearLayout c = card(true);
         c.addView(heading("THE PLAYERS"));
+        c.addView(subtitle("Your name, a name to use if you don't type one, and the three objects. "
+                + "Object 3 is the forced one in the normal reveal."));
         LinearLayout r1 = row();
         r1.addView(field("Magician", Prefs.MAGICIAN, false, false), weight(1));
         r1.addView(gap());
-        r1.addView(field("Spectator (fallback)", Prefs.SPECTATOR_FALLBACK, false, false), weight(1));
+        r1.addView(field("Spectator if none typed", Prefs.SPECTATOR_FALLBACK, false, false), weight(1));
         c.addView(r1);
         LinearLayout r2 = row();
         r2.setPadding(0, dp(10), 0, 0);
@@ -228,11 +230,34 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         templateField = (EditText) f.getChildAt(1);
         c.addView(f);
 
-        c.addView(chips(templateField, new String[]{"{first}", "{second}", "{obj1}", "{obj2}", "{obj3}"}));
-        TextView hint = text("Normal reveal: {first} is whoever picks the phone up and {obj3} is the forced object. "
-                + "Expert reveal: {first} is the spectator, {second} you, and the objects move to match the pickup.", 12, MUTED);
-        hint.setPadding(0, dp(10), 0, 0);
-        c.addView(hint);
+        c.addView(chips(templateField, Prefs.TAGS));
+
+        // What each tag means
+        LinearLayout legend = new LinearLayout(this);
+        legend.setOrientation(LinearLayout.VERTICAL);
+        legend.setPadding(dp(14), dp(10), dp(14), dp(12));
+        legend.setBackground(rounded(BG, BORDER, dp(1), dp(10)));
+        LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        llp.topMargin = dp(14);
+        legend.setLayoutParams(llp);
+        TextView lt = text("TAP A TAG TO INSERT IT · EACH ONE BECOMES:", 11, MUTED);
+        lt.setLetterSpacing(0.1f);
+        lt.setPadding(0, 0, 0, dp(4));
+        legend.addView(lt);
+        for (int i = 0; i < Prefs.TAGS.length; i++) {
+            TextView tag = text(Prefs.TAGS[i], 13, ACCENT);
+            tag.setTypeface(Typeface.DEFAULT_BOLD);
+            tag.setPadding(0, dp(8), 0, 0);
+            legend.addView(tag);
+            legend.addView(text(Prefs.TAG_HELP[i], 13, TEXT));
+        }
+        TextView how = text("Normal reveal: whoever picks the phone up gets Object 1, the other person Object 2. "
+                + "Expert reveal: the pickup decides who gets which object.", 12, MUTED);
+        how.setPadding(0, dp(12), 0, 0);
+        how.setLineSpacing(0, 1.2f);
+        legend.addView(how);
+        c.addView(legend);
         return c;
     }
 

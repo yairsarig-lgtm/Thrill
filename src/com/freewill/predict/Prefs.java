@@ -40,8 +40,24 @@ public final class Prefs {
             {1, 2, 0},   // left:           spectator 2, magician 3, place 1
     };
 
-    public static final String DEF_TEMPLATE =
-            "{first} has the {obj1}, {second} is holding the {obj2}, and the {obj3} is in the pocket.";
+    // Tags used in the prophecy text
+    public static final String T_SPECTATOR = "{spectator}";
+    public static final String T_MAGICIAN = "{magician}";
+    public static final String T_S_OBJ = "{spectator's object}";
+    public static final String T_M_OBJ = "{magician's object}";
+    public static final String T_REST = "{remaining object}";
+
+    public static final String[] TAGS = {T_SPECTATOR, T_MAGICIAN, T_S_OBJ, T_M_OBJ, T_REST};
+    public static final String[] TAG_HELP = {
+            "the name you type on the keyboard",
+            "your name, from The Players",
+            "the object the spectator ends up holding",
+            "the object you end up holding",
+            "the object left over (in the normal reveal, always Object 3)",
+    };
+
+    public static final String DEF_TEMPLATE = T_SPECTATOR + " is holding the " + T_S_OBJ + ", "
+            + T_MAGICIAN + " is holding the " + T_M_OBJ + ", and the " + T_REST + " is in the glass.";
 
     public static SharedPreferences get(Context c) {
         return c.getSharedPreferences(FILE, Context.MODE_PRIVATE);
@@ -59,6 +75,10 @@ public final class Prefs {
             default: def = "";
         }
         String v = p.getString(key, def);
+        if (TEMPLATE.equals(key) && v != null && v.contains("{obj")) {
+            v = migrate(v);
+            p.edit().putString(TEMPLATE, v).apply();
+        }
         return (v == null || v.trim().isEmpty()) ? def : v;
     }
 
@@ -87,24 +107,12 @@ public final class Prefs {
     }
 
     /**
-     * Expert reveal for outcome 0..5, using the shared prophecy text: {first} is the spectator,
-     * {second} the magician, and {obj1}/{obj2}/{obj3} become the spectator's object, the
-     * magician's object and the one left in the place.
+     * Expert reveal for outcome 0..5, using the shared prophecy text.
      */
-    public static String buildSix(SharedPreferences p, int outcome, String spectatorName) {
-        String spectator = (spectatorName == null || spectatorName.trim().isEmpty())
-                ? str(p, SPECTATOR_FALLBACK) : spectatorName.trim();
-        String magician = str(p, MAGICIAN);
+    public static String buildSix(SharedPreferences p, int outcome, String typedName) {
         String[] objs = {str(p, OBJ1), str(p, OBJ2), str(p, OBJ3)};
         int[] m = SIX[outcome];
-        return str(p, TEMPLATE)
-                .replace("{first}", spectator)
-                .replace("{second}", magician)
-                .replace("{obj1}", objs[m[0]])
-                .replace("{obj2}", objs[m[1]])
-                .replace("{obj3}", objs[m[2]])
-                .replace("{spectator}", spectator)
-                .replace("{magician}", magician);
+        return fill(p, spectatorName(p, typedName), str(p, MAGICIAN), objs[m[0]], objs[m[1]], objs[m[2]]);
     }
 
     /** The prediction for a routine (1 or 2) and a pickup. */
@@ -113,21 +121,38 @@ public final class Prefs {
         return buildPrediction(p, pk.facing, name);
     }
 
-    /** Builds the final prediction text for a pickup state. */
-    public static String buildPrediction(SharedPreferences p, int state, String spectatorName) {
-        String spectator = (spectatorName == null || spectatorName.trim().isEmpty())
-                ? str(p, SPECTATOR_FALLBACK) : spectatorName.trim();
-        String magician = str(p, MAGICIAN);
-        boolean specFirst = spectatorFirst(state);
-        String first = specFirst ? spectator : magician;
-        String second = specFirst ? magician : spectator;
-        return str(p, TEMPLATE)
-                .replace("{first}", first)
-                .replace("{second}", second)
-                .replace("{obj1}", str(p, OBJ1))
-                .replace("{obj2}", str(p, OBJ2))
-                .replace("{obj3}", str(p, OBJ3))
-                .replace("{spectator}", spectator)
-                .replace("{magician}", magician);
+    /** Converts prophecy text written with the old {first}/{obj1} tags. */
+    static String migrate(String v) {
+        return v.replace("{first}", T_SPECTATOR)
+                .replace("{second}", T_MAGICIAN)
+                .replace("{obj1}", T_S_OBJ)
+                .replace("{obj2}", T_M_OBJ)
+                .replace("{obj3}", T_REST);
+    }
+
+    /** Fills the prophecy text. Accepts straight or curly apostrophes in the tags. */
+    static String fill(SharedPreferences p, String spectator, String magician,
+                       String sObj, String mObj, String rest) {
+        return str(p, TEMPLATE).replace('\u2019', '\'')
+                .replace(T_SPECTATOR, spectator)
+                .replace(T_MAGICIAN, magician)
+                .replace(T_S_OBJ, sObj)
+                .replace(T_M_OBJ, mObj)
+                .replace(T_REST, rest);
+    }
+
+    private static String spectatorName(SharedPreferences p, String typed) {
+        return (typed == null || typed.trim().isEmpty()) ? str(p, SPECTATOR_FALLBACK) : typed.trim();
+    }
+
+    /**
+     * Normal reveal: whoever picks the phone up holds Object 1, the other person Object 2,
+     * and Object 3 (the forced one) is left over.
+     */
+    public static String buildPrediction(SharedPreferences p, int state, String typedName) {
+        boolean specPicked = spectatorFirst(state);
+        String o1 = str(p, OBJ1), o2 = str(p, OBJ2);
+        return fill(p, spectatorName(p, typedName), str(p, MAGICIAN),
+                specPicked ? o1 : o2, specPicked ? o2 : o1, str(p, OBJ3));
     }
 }
