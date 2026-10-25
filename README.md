@@ -37,6 +37,10 @@ Type the routine number straight after the name; it is removed before the predic
 
 The pause is made early in the lift: raise the edge slightly, hold still for the pause length, 0.2–1.0 s (a silent tap confirms it), then finish the pickup.
 
+## Hebrew tester build
+
+`hebrew-version/` holds a separate, fully Hebrew copy of the app for testers (its own package, app name and keyboard, so it installs next to the main app). It is not part of the main release.
+
 ## Project layout
 
 - `src/com/freewill/predict/`
