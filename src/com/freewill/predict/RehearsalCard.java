@@ -46,7 +46,7 @@ class RehearsalCard implements PickupDetector.Listener {
     View build(String lockedName) {
         LinearLayout c = a.column();
         c.setGravity(Gravity.CENTER_HORIZONTAL);
-        c.setPadding(a.dp(16), a.dp(24), a.dp(16), a.dp(22));
+        c.setPaddingRelative(a.dp(16), a.dp(24), a.dp(16), a.dp(22));
         GradientDrawable g = new GradientDrawable();
         g.setGradientType(GradientDrawable.RADIAL_GRADIENT);
         g.setGradientCenter(0.5f, 0.3f);
@@ -64,12 +64,12 @@ class RehearsalCard implements PickupDetector.Listener {
         TextView sub = a.text(withPicker ? "Choose a routine, then lay the phone down."
                 : lockedName + " only. Lay the phone down and pick it up.", 12, BaseActivity.MUTED);
         sub.setGravity(Gravity.CENTER);
-        sub.setPadding(0, a.dp(6), 0, 0);
+        sub.setPaddingRelative(0, a.dp(6), 0, 0);
         c.addView(sub, a.matchWrap());
 
         if (withPicker) {
             pickerHolder = a.column();
-            pickerHolder.setPadding(0, a.dp(22), 0, 0);
+            pickerHolder.setPaddingRelative(0, a.dp(22), 0, 0);
             c.addView(pickerHolder, a.matchWrap());
             rebuildPicker();
         }
@@ -88,25 +88,25 @@ class RehearsalCard implements PickupDetector.Listener {
 
         desc = a.text("", 13, BaseActivity.MUTED);
         desc.setGravity(Gravity.CENTER);
-        desc.setPadding(a.dp(12), a.dp(6), a.dp(12), 0);
+        desc.setPaddingRelative(a.dp(12), a.dp(6), a.dp(12), 0);
         c.addView(desc, a.matchWrap());
 
         result = a.serifText("", 15, BaseActivity.TEXT, false);
         result.setGravity(Gravity.CENTER);
         result.setLineSpacing(0, 1.3f);
-        result.setPadding(a.dp(8), a.dp(12), a.dp(8), 0);
+        result.setPaddingRelative(a.dp(8), a.dp(12), a.dp(8), 0);
         c.addView(result, a.matchWrap());
 
         values = a.text("", 11, BaseActivity.FAINT);
         values.setTypeface(Typeface.MONOSPACE);
         values.setGravity(Gravity.CENTER);
-        values.setPadding(0, a.dp(12), 0, 0);
+        values.setPaddingRelative(0, a.dp(12), 0, 0);
         c.addView(values, a.matchWrap());
 
         if (!detector.hasRotationSensor()) {
             TextView w = a.text("No gyroscope found: who picked it up will be guessed.", 12, BaseActivity.ACCENT);
             w.setGravity(Gravity.CENTER);
-            w.setPadding(0, a.dp(10), 0, 0);
+            w.setPaddingRelative(0, a.dp(10), 0, 0);
             c.addView(w, a.matchWrap());
         }
         return c;
@@ -129,7 +129,7 @@ class RehearsalCard implements PickupDetector.Listener {
             TextView b = a.text(Routines.roman(id) + "\n" + Routines.shortName(a.prefs, id), 11, BaseActivity.MUTED);
             b.setGravity(Gravity.CENTER);
             b.setMinHeight(a.dp(56));
-            b.setPadding(a.dp(2), a.dp(6), a.dp(2), a.dp(6));
+            b.setPaddingRelative(a.dp(2), a.dp(6), a.dp(2), a.dp(6));
             b.setTag(id);
             LinearLayout.LayoutParams lp = a.weight(1);
             lp.setMargins(a.dp(4), 0, a.dp(4), 0);

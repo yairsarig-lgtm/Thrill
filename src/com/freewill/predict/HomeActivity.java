@@ -38,13 +38,13 @@ public class HomeActivity extends BaseActivity {
         page.addView(hero());
 
         LinearLayout body = column();
-        body.setPadding(dp(16), dp(4), dp(16), 0);
+        body.setPaddingRelative(dp(16), dp(4), dp(16), 0);
         page.addView(body, matchWrap());
 
         body.addView(statusCard());
 
         View h = heading("THE ROUTINES");
-        ((LinearLayout) h).setPadding(0, dp(26), 0, dp(8));
+        ((LinearLayout) h).setPaddingRelative(0, dp(26), 0, dp(8));
         body.addView(h);
         TextView sub = text("Type the spectator's name, then the routine's number. No number runs routine I.", 12, MUTED);
         sub.setLineSpacing(0, 1.2f);
@@ -103,14 +103,14 @@ public class HomeActivity extends BaseActivity {
         f.addView(emblem, elp);
 
         LinearLayout titles = column();
-        titles.setPadding(0, 0, 0, dp(22));
-        TextView name = serifText("THRILL", 34, TEXT, true);
+        titles.setPaddingRelative(0, 0, 0, dp(22));
+        TextView name = logoText("THRILL", 34, TEXT);
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
         TextView sub = text("PREDICTION KEYBOARD · " + VERSION.toUpperCase(), 11, MUTED);
         centered(sub, 0.25f);
-        sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
+        sub.setPaddingRelative(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
         f.addView(titles, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM));
@@ -120,7 +120,7 @@ public class HomeActivity extends BaseActivity {
     private View statusCard() {
         LinearLayout c = row();
         c.setGravity(Gravity.CENTER_VERTICAL);
-        c.setPadding(dp(16), dp(12), dp(12), dp(12));
+        c.setPaddingRelative(dp(16), dp(12), dp(12), dp(12));
         c.setBackground(rounded(CARD, BORDER, dp(1), dp(14)));
         c.setLayoutParams(matchWrap(6));
 
@@ -128,7 +128,7 @@ public class HomeActivity extends BaseActivity {
         c.addView(statusDiamond);
 
         LinearLayout t = column();
-        t.setPadding(dp(12), 0, dp(8), 0);
+        t.setPaddingRelative(dp(12), 0, dp(8), 0);
         statusTitle = text("", 14, TEXT);
         statusTitle.setTypeface(Typeface.DEFAULT_BOLD);
         statusSub = text("", 12, MUTED);
@@ -169,29 +169,29 @@ public class HomeActivity extends BaseActivity {
     private View routineCard(int r) {
         LinearLayout c = row();
         c.setGravity(Gravity.CENTER_VERTICAL);
-        c.setPadding(dp(16), dp(14), dp(12), dp(14));
+        c.setPaddingRelative(dp(16), dp(14), dp(12), dp(14));
         c.setBackground(rounded(CARD, BORDER, dp(1), dp(14)));
         c.setLayoutParams(matchWrap(10));
         c.setClickable(true);
         c.setFocusable(true);
         c.setOnClickListener(v -> open(r));
 
-        TextView num = serifText(Routines.roman(r), r >= 10 ? 15 : 20, ACCENT, true);
+        TextView num = logoText(Routines.roman(r), r >= 10 ? 15 : 20, ACCENT);
         num.setGravity(Gravity.CENTER);
         num.setBackground(rounded(0x00000000, BORDER_STRONG, dp(1), dp(8)));
         c.addView(num, new LinearLayout.LayoutParams(dp(52), dp(64)));
 
         LinearLayout t = column();
-        t.setPadding(dp(14), 0, dp(8), 0);
+        t.setPaddingRelative(dp(14), 0, dp(8), 0);
         TextView name = serifText(Routines.name(prefs, r).toUpperCase(), 15, TEXT, true);
         name.setLetterSpacing(0.06f);
         t.addView(name);
         TextView sum = text(Routines.summary(prefs, r), 12, MUTED);
-        sum.setPadding(0, dp(3), 0, 0);
+        sum.setPaddingRelative(0, dp(3), 0, 0);
         t.addView(sum);
         TextView code = text(r == Routines.NORMAL ? "Noa · Noa1" : "Noa" + r, 11, ACCENT);
         code.setTypeface(Typeface.DEFAULT_BOLD);
-        code.setPadding(dp(8), dp(3), dp(8), dp(3));
+        code.setPaddingRelative(dp(8), dp(3), dp(8), dp(3));
         code.setBackground(rounded(CHIP, 0, 0, dp(6)));
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -207,27 +207,27 @@ public class HomeActivity extends BaseActivity {
     private View buildCard() {
         LinearLayout c = row();
         c.setGravity(Gravity.CENTER_VERTICAL);
-        c.setPadding(dp(16), dp(14), dp(12), dp(14));
+        c.setPaddingRelative(dp(16), dp(14), dp(12), dp(14));
         c.setBackground(dashed(BORDER_STRONG, dp(14)));
         c.setLayoutParams(matchWrap(10));
         c.setClickable(true);
         c.setFocusable(true);
         c.setOnClickListener(v -> open(Routines.createCustom(prefs)));
 
-        TextView plus = serifText("+", 26, ACCENT, true);
+        TextView plus = logoText("+", 26, ACCENT);
         plus.setGravity(Gravity.CENTER);
         plus.setBackground(dashed(BORDER_STRONG, dp(8)));
         c.addView(plus, new LinearLayout.LayoutParams(dp(52), dp(64)));
 
         LinearLayout t = column();
-        t.setPadding(dp(14), 0, dp(8), 0);
+        t.setPaddingRelative(dp(14), 0, dp(8), 0);
         TextView name = serifText("BUILD IT YOURSELF", 15, TEXT, true);
         name.setLetterSpacing(0.06f);
         t.addView(name);
         int next = Routines.FIRST_CUSTOM;
         for (int id : Routines.customIds(prefs)) if (id >= next) next = id + 1;
         TextView sum = text("2 to 8 outcomes, on the pickups you choose · becomes routine " + Routines.roman(next), 12, MUTED);
-        sum.setPadding(0, dp(3), 0, 0);
+        sum.setPaddingRelative(0, dp(3), 0, 0);
         t.addView(sum);
         c.addView(t, weight(1));
         return c;
@@ -242,7 +242,7 @@ public class HomeActivity extends BaseActivity {
     private View credits() {
         LinearLayout c = column();
         c.setGravity(Gravity.CENTER_HORIZONTAL);
-        c.setPadding(dp(16), dp(44), dp(16), dp(36));
+        c.setPaddingRelative(dp(16), dp(44), dp(16), dp(36));
 
         LinearLayout orn = row();
         orn.setGravity(Gravity.CENTER_VERTICAL);
@@ -259,7 +259,7 @@ public class HomeActivity extends BaseActivity {
         // name sit level even when one name wraps.
         LinearLayout pair = row();
         pair.setGravity(Gravity.TOP);
-        pair.setPadding(0, dp(24), 0, dp(22));
+        pair.setPaddingRelative(0, dp(24), 0, dp(22));
         pair.addView(creditColumn("CREATED BY", "Yair Sarig"), weight(1));
         View divider = new View(this);
         divider.setBackgroundColor(BORDER);
@@ -284,7 +284,7 @@ public class HomeActivity extends BaseActivity {
         TextView n = serifText(name, 16, TEXT, true);
         n.setGravity(Gravity.CENTER);
         n.setLetterSpacing(0.08f);
-        n.setPadding(0, dp(8), 0, 0);
+        n.setPaddingRelative(0, dp(8), 0, 0);
         n.setLayoutParams(matchWrap());
         l.addView(n);
         return l;

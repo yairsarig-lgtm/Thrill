@@ -76,7 +76,7 @@ public class RoutineActivity extends BaseActivity {
         page.addView(header());
 
         LinearLayout body = column();
-        body.setPadding(dp(16), dp(8), dp(16), dp(40));
+        body.setPaddingRelative(dp(16), dp(8), dp(16), dp(40));
         page.addView(body, matchWrap());
 
         TextView ex = text(Routines.explanation(prefs, r), 14, MUTED);
@@ -126,23 +126,24 @@ public class RoutineActivity extends BaseActivity {
 
         TextView back = text("‹", 30, TEXT);
         back.setGravity(Gravity.CENTER);
-        back.setPadding(0, 0, dp(2), dp(4));
+        back.setPaddingRelative(0, 0, dp(2), dp(4));
         back.setBackground(rounded(0x990B0809, 0, 0, dp(22)));
         back.setContentDescription("Back to routines");
         back.setOnClickListener(v -> finish());
         FrameLayout.LayoutParams blp = new FrameLayout.LayoutParams(dp(44), dp(44), Gravity.TOP | Gravity.START);
-        blp.setMargins(dp(12), dp(14), 0, 0);
+        blp.topMargin = dp(14);
+        blp.setMarginStart(dp(12));
         f.addView(back, blp);
 
         LinearLayout t = column();
-        t.setPadding(0, 0, 0, dp(20));
-        TextView num = serifText(Routines.roman(r), 60, ACCENT, true);
+        t.setPaddingRelative(0, 0, 0, dp(20));
+        TextView num = logoText(Routines.roman(r), 60, ACCENT);
         num.setShadowLayer(dp(14), 0, dp(4), 0x80C42A3A);
         centered(num, 0f);
         t.addView(num);
         TextView title = serifText("", 22, TEXT, true);
         centered(title, 0.12f);
-        title.setPadding(title.getPaddingLeft(), dp(8), 0, 0);
+        title.setPaddingRelative(title.getPaddingLeft(), dp(8), 0, 0);
         t.addView(title);
         Runnable setTitle = () -> title.setText(Routines.name(prefs, r).toUpperCase());
         setTitle.run();
@@ -151,11 +152,11 @@ public class RoutineActivity extends BaseActivity {
         TextView code = text(r == Routines.NORMAL ? "Type the name, or the name + 1"
                 : (Routines.isCustom(r) ? "Build It Yourself · type the name + " : "Type the name + ") + r, 12, ACCENT);
         code.setTypeface(Typeface.DEFAULT_BOLD);
-        code.setPadding(dp(10), dp(5), dp(10), dp(5));
+        code.setPaddingRelative(dp(10), dp(5), dp(10), dp(5));
         code.setBackground(rounded(0xE62A1217, 0, 0, dp(6)));
         LinearLayout codeRow = row();
         codeRow.setGravity(Gravity.CENTER);
-        codeRow.setPadding(0, dp(8), 0, 0);
+        codeRow.setPaddingRelative(0, dp(8), 0, 0);
         codeRow.addView(code);
         t.addView(codeRow, matchWrap());
 
@@ -183,7 +184,7 @@ public class RoutineActivity extends BaseActivity {
             case Routines.NORMAL:
             case Routines.EXPERT: {
                 LinearLayout r2 = row();
-                r2.setPadding(0, dp(10), 0, 0);
+                r2.setPaddingRelative(0, dp(10), 0, 0);
                 for (int i = 0; i < 3; i++) {
                     if (i > 0) r2.addView(spacer(10, 1));
                     String lab = "Object " + (i + 1) + (r == Routines.NORMAL && i == 2 ? " · forced" : "");
@@ -194,11 +195,11 @@ public class RoutineActivity extends BaseActivity {
             }
             case Routines.EIGHT: {
                 TextView l = label("The eight items");
-                l.setPadding(0, dp(12), 0, dp(6));
+                l.setPaddingRelative(0, dp(12), 0, dp(6));
                 c.addView(l);
                 for (int row = 0; row < 4; row++) {
                     LinearLayout rr = row();
-                    rr.setPadding(0, row == 0 ? 0 : dp(8), 0, 0);
+                    rr.setPaddingRelative(0, row == 0 ? 0 : dp(8), 0, 0);
                     for (int col = 0; col < 2; col++) {
                         int i = row * 2 + col;
                         if (col == 1) rr.addView(spacer(8, 1));
@@ -210,7 +211,7 @@ public class RoutineActivity extends BaseActivity {
             }
             case Routines.DIE: {
                 TextView l = label("Write numbers as");
-                l.setPadding(0, dp(12), 0, dp(6));
+                l.setPaddingRelative(0, dp(12), 0, dp(6));
                 c.addView(l);
                 c.addView(segmented(new String[]{"Digits", "Words"}, new String[]{"4", "four"},
                         Routines.dieWords(prefs) ? 1 : 0, pos -> {
@@ -221,7 +222,7 @@ public class RoutineActivity extends BaseActivity {
             }
             case Routines.ESP: {
                 TextView l = label("Symbol names, as they appear in the prediction");
-                l.setPadding(0, dp(12), 0, dp(8));
+                l.setPaddingRelative(0, dp(12), 0, dp(8));
                 c.addView(l);
                 LinearLayout rr = row();
                 for (int i = 0; i < 5; i++) {
@@ -234,7 +235,7 @@ public class RoutineActivity extends BaseActivity {
                             s -> prefs.edit().putString(Prefs.k(r, "sym" + (idx + 1)), s).apply());
                     e.setTextSize(12);
                     e.setGravity(Gravity.CENTER);
-                    e.setPadding(dp(2), dp(6), dp(2), dp(6));
+                    e.setPaddingRelative(dp(2), dp(6), dp(2), dp(6));
                     e.setMinHeight(dp(40));
                     LinearLayout.LayoutParams elp = matchWrap(6);
                     col.addView(e, elp);
@@ -247,7 +248,7 @@ public class RoutineActivity extends BaseActivity {
             }
             case Routines.COIN: {
                 TextView l = label("Number of flips");
-                l.setPadding(0, dp(12), 0, dp(6));
+                l.setPaddingRelative(0, dp(12), 0, dp(6));
                 c.addView(l);
                 c.addView(segmented(new String[]{"1", "2", "3"}, new String[]{"2 outs", "4 outs", "8 outs"},
                         Routines.flips(prefs) - 1, pos -> {
@@ -255,7 +256,7 @@ public class RoutineActivity extends BaseActivity {
                             main.post(this::rebuild);
                         }), matchWrap());
                 LinearLayout rr = row();
-                rr.setPadding(0, dp(12), 0, 0);
+                rr.setPaddingRelative(0, dp(12), 0, 0);
                 rr.addView(field("Word for heads", Prefs.k(r, "heads"), Routines.heads(prefs), null, false), weight(1));
                 rr.addView(spacer(10, 1));
                 rr.addView(field("Word for tails", Prefs.k(r, "tails"), Routines.tails(prefs), null, false), weight(1));
@@ -272,14 +273,14 @@ public class RoutineActivity extends BaseActivity {
     private View numberedInput(int n, String value, String key) {
         LinearLayout box = row();
         box.setGravity(Gravity.CENTER_VERTICAL);
-        box.setPadding(dp(10), 0, dp(4), 0);
+        box.setPaddingRelative(dp(10), 0, dp(4), 0);
         box.setBackground(rounded(BG, BORDER, dp(1), dp(10)));
         TextView num = serifText(String.valueOf(n), 13, ACCENT, true);
         num.setMinWidth(dp(16));
         box.addView(num);
         EditText e = input(value, null, false, s -> prefs.edit().putString(key, s).apply());
         e.setBackground(null);
-        e.setPadding(dp(6), dp(8), dp(6), dp(8));
+        e.setPaddingRelative(dp(6), dp(8), dp(6), dp(8));
         box.addView(e, weight(1));
         return box;
     }
@@ -315,7 +316,7 @@ public class RoutineActivity extends BaseActivity {
 
         if (force) {
             TextView l = label("You point at (chosen in advance from the eight items)");
-            l.setPadding(0, dp(14), 0, dp(6));
+            l.setPaddingRelative(0, dp(14), 0, dp(6));
             c.addView(l);
             Spinner sp = dropdown(pointedOptions(), Routines.pointed(prefs), pos -> {
                 prefs.edit().putInt(Prefs.k(r, "pointed"), pos).apply();
@@ -332,7 +333,7 @@ public class RoutineActivity extends BaseActivity {
 
         LinearLayout f = field(force ? "Force text" : "Prediction text", Prefs.k(r, Routines.templateKey(prefs, r)),
                 Routines.template(prefs, r), null, true);
-        f.setPadding(0, dp(12), 0, 0);
+        f.setPaddingRelative(0, dp(12), 0, 0);
         editOf(f).setMinLines(3);
         c.addView(f);
         EditText tpl = editOf(f);
@@ -340,7 +341,7 @@ public class RoutineActivity extends BaseActivity {
 
         if (force) {
             LinearLayout box = column();
-            box.setPadding(dp(14), dp(12), dp(14), dp(12));
+            box.setPaddingRelative(dp(14), dp(12), dp(14), dp(12));
             box.setBackground(rounded(CHIP, 0, 0, dp(10)));
             box.setLayoutParams(matchWrap(10));
             TextView t = text("FLAVOR IDEAS · TAP TO USE", 11, ACCENT);
@@ -350,7 +351,7 @@ public class RoutineActivity extends BaseActivity {
             for (String idea : Routines.EIGHT_FLAVOR) {
                 TextView it = text("“" + idea + "”", 12, TEXT);
                 it.setLineSpacing(0, 1.2f);
-                it.setPadding(0, dp(10), 0, dp(4));
+                it.setPaddingRelative(0, dp(10), 0, dp(4));
                 it.setOnClickListener(v -> tpl.setText(idea));
                 box.addView(it);
             }
@@ -380,7 +381,7 @@ public class RoutineActivity extends BaseActivity {
         String[] names = {"Flip 1", "Flip 2", "Flip 3"};
         for (int k = 1; k <= n; k++) {
             LinearLayout f = field(names[k - 1], Prefs.k(r, "line" + k), Routines.coinLine(prefs, k), null, false);
-            f.setPadding(0, dp(10), 0, 0);
+            f.setPaddingRelative(0, dp(10), 0, 0);
             c.addView(f);
         }
         c.addView(tagLegend(first, Routines.tags(prefs, r), Routines.tagHelp(prefs, r)));
@@ -416,7 +417,7 @@ public class RoutineActivity extends BaseActivity {
         c.addView(diagram(slot -> Routines.cellLabel(prefs, r, slot)));
         if (r != Routines.COIN || Routines.flips(prefs) == 3) {
             View pc = pauseControl(r);
-            pc.setPadding(0, dp(8), 0, 0);
+            pc.setPaddingRelative(0, dp(8), 0, 0);
             c.addView(pc);
         }
 
@@ -437,7 +438,7 @@ public class RoutineActivity extends BaseActivity {
     private View coinMemoryRule() {
         int n = Routines.flips(prefs);
         LinearLayout box = column();
-        box.setPadding(dp(14), dp(12), dp(14), dp(12));
+        box.setPaddingRelative(dp(14), dp(12), dp(14), dp(12));
         box.setBackground(rounded(CHIP, 0, 0, dp(12)));
         box.setLayoutParams(matchWrap(0));
         TextView t = text("EASY TO REMEMBER", 11, ACCENT);
@@ -453,11 +454,11 @@ public class RoutineActivity extends BaseActivity {
                 "3rd flip · Heads = straight lift · Tails = pause"};
         for (String s : lines) {
             TextView l = text(s, 13, TEXT);
-            l.setPadding(0, dp(8), 0, 0);
+            l.setPaddingRelative(0, dp(8), 0, 0);
             box.addView(l);
         }
         LinearLayout wrap = column();
-        wrap.setPadding(0, 0, 0, dp(10));
+        wrap.setPaddingRelative(0, 0, 0, dp(10));
         wrap.addView(box);
         return wrap;
     }
@@ -466,7 +467,7 @@ public class RoutineActivity extends BaseActivity {
 
     private View preview(String title, Sentence s) {
         LinearLayout box = column();
-        box.setPadding(dp(14), dp(12), dp(14), dp(12));
+        box.setPaddingRelative(dp(14), dp(12), dp(14), dp(12));
         box.setBackground(rounded(BG, BORDER, dp(1), dp(10)));
         box.setLayoutParams(matchWrap(10));
         TextView label = text(title, 11, MUTED);
@@ -474,7 +475,7 @@ public class RoutineActivity extends BaseActivity {
         box.addView(label);
         TextView pv = serifText("", 14, TEXT, false);
         pv.setLineSpacing(0, 1.3f);
-        pv.setPadding(0, dp(6), 0, 0);
+        pv.setPaddingRelative(0, dp(6), 0, 0);
         box.addView(pv);
         Runnable fill = () -> pv.setText(s.get());
         fill.run();
@@ -489,7 +490,7 @@ public class RoutineActivity extends BaseActivity {
         c.addView(heading("THE ROUTINE"));
         c.addView(field("Routine name", Prefs.k(r, "name"), Prefs.raw(prefs, r, "name", ""), "Name your routine", false));
         LinearLayout names = namesRow();
-        names.setPadding(0, dp(10), 0, 0);
+        names.setPaddingRelative(0, dp(10), 0, 0);
         c.addView(names, matchWrap());
         c.addView(hint("Both names are available as tags in your prophecy."));
         return c;
@@ -507,14 +508,15 @@ public class RoutineActivity extends BaseActivity {
             final int idx = i;
             LinearLayout rr = row();
             rr.setGravity(Gravity.CENTER_VERTICAL);
-            rr.setPadding(0, i == 0 ? 0 : dp(8), 0, 0);
+            rr.setPaddingRelative(0, i == 0 ? 0 : dp(8), 0, 0);
             TextView num = serifText(String.valueOf(i + 1), 14, ACCENT, true);
             num.setGravity(Gravity.CENTER);
             rr.addView(num, new LinearLayout.LayoutParams(dp(22), ViewGroup.LayoutParams.WRAP_CONTENT));
             EditText e = input(Routines.customOutcome(prefs, r, i), "Outcome " + (i + 1), false,
                     s -> prefs.edit().putString(Prefs.k(r, "out" + idx), s).apply());
             LinearLayout.LayoutParams elp = weight(1);
-            elp.setMargins(dp(6), 0, dp(8), 0);
+            elp.setMarginStart(dp(6));
+            elp.setMarginEnd(dp(8));
             rr.addView(e, elp);
             Spinner sp = dropdown(SHORT_SLOTS, Routines.customSlot(prefs, r, i), pos -> {
                 Routines.setCustomSlot(prefs, r, idx, pos);
@@ -554,7 +556,7 @@ public class RoutineActivity extends BaseActivity {
         ((LinearLayout.LayoutParams) d.getLayoutParams()).topMargin = dp(14);
         c.addView(d);
         View pc = pauseControl(r);
-        pc.setPadding(0, dp(8), 0, 0);
+        pc.setPaddingRelative(0, dp(8), 0, 0);
         c.addView(pc);
         return c;
     }
@@ -578,7 +580,7 @@ public class RoutineActivity extends BaseActivity {
         for (Routines.Idea idea : Routines.IDEAS) {
             boolean on = idea.name.equals(inUse);
             LinearLayout box = column();
-            box.setPadding(dp(14), dp(12), dp(14), dp(12));
+            box.setPaddingRelative(dp(14), dp(12), dp(14), dp(12));
             box.setBackground(on ? rounded(0xFF2A1217, CRIMSON, dp(2), dp(10)) : rounded(BG, BORDER, dp(1), dp(10)));
             box.setLayoutParams(matchWrap(10));
             box.setClickable(true);
@@ -590,14 +592,14 @@ public class RoutineActivity extends BaseActivity {
                 TextView badge = text("IN USE", 10, 0xFFFFFFFF);
                 badge.setTypeface(Typeface.DEFAULT_BOLD);
                 badge.setLetterSpacing(0.12f);
-                badge.setPadding(dp(8), dp(3), dp(8), dp(3));
+                badge.setPaddingRelative(dp(8), dp(3), dp(8), dp(3));
                 badge.setBackground(rounded(CRIMSON, 0, 0, dp(999)));
                 titleRow.addView(badge);
             }
             box.addView(titleRow, matchWrap());
             TextView d = text(idea.description, 12, MUTED);
             d.setLineSpacing(0, 1.2f);
-            d.setPadding(0, dp(4), 0, 0);
+            d.setPaddingRelative(0, dp(4), 0, 0);
             box.addView(d);
             box.setOnClickListener(v -> useIdea(idea));
             c.addView(box);
@@ -629,7 +631,7 @@ public class RoutineActivity extends BaseActivity {
         Dialog dlg = new Dialog(this);
         dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
         LinearLayout c = column();
-        c.setPadding(dp(20), dp(24), dp(20), dp(16));
+        c.setPaddingRelative(dp(20), dp(24), dp(20), dp(16));
         c.setBackground(rounded(CARD, BORDER_STRONG, dp(1), dp(18)));
 
         TextView t = serifText("Delete “" + Routines.name(prefs, r) + "”?", 18, TEXT, true);
@@ -639,25 +641,25 @@ public class RoutineActivity extends BaseActivity {
                 ? "Routine " + Routines.roman(r) + " will be removed. This can't be undone."
                 : "Routine " + Routines.roman(r) + " will be removed. What should happen to the numbers after it?", 13, MUTED);
         m.setLineSpacing(0, 1.25f);
-        m.setPadding(0, dp(10), 0, dp(6));
+        m.setPaddingRelative(0, dp(10), 0, dp(6));
         c.addView(m);
 
         if (plan.isEmpty()) {
             // Nothing to renumber: a plain confirm with Cancel and Delete side by side.
             LinearLayout buttons = row();
             buttons.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
-            buttons.setPadding(0, dp(14), 0, 0);
+            buttons.setPaddingRelative(0, dp(14), 0, 0);
             TextView no = text("Cancel", 14, MUTED);
             no.setGravity(Gravity.CENTER);
             no.setMinHeight(dp(44));
-            no.setPadding(dp(16), 0, dp(16), 0);
+            no.setPaddingRelative(dp(16), 0, dp(16), 0);
             no.setOnClickListener(v -> dlg.dismiss());
             buttons.addView(no);
             TextView yes = text("Delete", 14, 0xFFFFFFFF);
             yes.setTypeface(Typeface.DEFAULT_BOLD);
             yes.setGravity(Gravity.CENTER);
             yes.setMinHeight(dp(44));
-            yes.setPadding(dp(22), 0, dp(22), 0);
+            yes.setPaddingRelative(dp(22), 0, dp(22), 0);
             yes.setBackground(rounded(CRIMSON, 0, 0, dp(10)));
             yes.setOnClickListener(v -> {
                 Routines.deleteCustom(prefs, r, false);
@@ -666,7 +668,7 @@ public class RoutineActivity extends BaseActivity {
             });
             LinearLayout.LayoutParams ylp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            ylp.leftMargin = dp(8);
+            ylp.setMarginStart(dp(8));
             buttons.addView(yes, ylp);
             c.addView(buttons, matchWrap());
         } else {
@@ -706,7 +708,7 @@ public class RoutineActivity extends BaseActivity {
 
     private View dialogOption(String title, String desc, String extra, Runnable action) {
         LinearLayout b = column();
-        b.setPadding(dp(14), dp(14), dp(14), dp(14));
+        b.setPaddingRelative(dp(14), dp(14), dp(14), dp(14));
         b.setBackground(rounded(BG, BORDER_STRONG, dp(1), dp(12)));
         b.setLayoutParams(matchWrap(10));
         b.setClickable(true);
@@ -716,12 +718,12 @@ public class RoutineActivity extends BaseActivity {
         b.addView(t);
         TextView d = text(desc, 12, MUTED);
         d.setLineSpacing(0, 1.2f);
-        d.setPadding(0, dp(4), 0, 0);
+        d.setPaddingRelative(0, dp(4), 0, 0);
         b.addView(d);
         if (extra != null) {
             TextView e = text(extra, 12, ACCENT);
             e.setTypeface(Typeface.DEFAULT_BOLD);
-            e.setPadding(0, dp(4), 0, 0);
+            e.setPaddingRelative(0, dp(4), 0, 0);
             b.addView(e);
         }
         b.setOnClickListener(v -> action.run());

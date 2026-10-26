@@ -69,6 +69,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         root.setBackgroundColor(bg);
         int p = dp(4);
         root.setPadding(p, dp(8), p, dp(10));
+        root.setLayoutDirection(View.LAYOUT_DIRECTION_LTR); // keys keep their physical order
 
         // Number row
         LinearLayout nums = row();

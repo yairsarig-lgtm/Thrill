@@ -53,6 +53,8 @@ abstract class BaseActivity extends Activity {
 
     protected SharedPreferences prefs;
     protected Typeface serif, serifBold;
+    /** The logo face, used for THRILL and the routine numerals. */
+    protected Typeface logo;
     protected final Handler main = new Handler(Looper.getMainLooper());
 
     /** Things that show values derived from settings; re-run after any edit. */
@@ -68,9 +70,11 @@ abstract class BaseActivity extends Activity {
         try {
             serif = Typeface.createFromAsset(getAssets(), "fonts/cinzel-medium.ttf");
             serifBold = Typeface.createFromAsset(getAssets(), "fonts/cinzel-bold.ttf");
+            logo = Typeface.createFromAsset(getAssets(), "fonts/cinzel-bold.ttf");
         } catch (Exception e) {
             serif = Typeface.SERIF;
             serifBold = Typeface.create(Typeface.SERIF, Typeface.BOLD);
+            logo = serifBold;
         }
     }
 
@@ -95,6 +99,12 @@ abstract class BaseActivity extends Activity {
     TextView serifText(String s, int sp, int color, boolean bold) {
         TextView t = text(s, sp, color);
         t.setTypeface(bold ? serifBold : serif);
+        return t;
+    }
+
+    TextView logoText(String s, int sp, int color) {
+        TextView t = text(s, sp, color);
+        t.setTypeface(logo);
         return t;
     }
 
@@ -150,7 +160,7 @@ abstract class BaseActivity extends Activity {
     void centered(TextView t, float spacingEm) {
         t.setLetterSpacing(spacingEm);
         t.setGravity(Gravity.CENTER);
-        t.setPadding(Math.round(spacingEm * t.getTextSize()), t.getPaddingTop(), 0, t.getPaddingBottom());
+        t.setPaddingRelative(Math.round(spacingEm * t.getTextSize()), t.getPaddingTop(), 0, t.getPaddingBottom());
         t.setLayoutParams(matchWrap());
     }
 
@@ -158,7 +168,7 @@ abstract class BaseActivity extends Activity {
 
     LinearLayout card() {
         LinearLayout c = column();
-        c.setPadding(dp(16), dp(18), dp(16), dp(18));
+        c.setPaddingRelative(dp(16), dp(18), dp(16), dp(18));
         c.setBackground(rounded(CARD, BORDER, dp(1), dp(14)));
         c.setLayoutParams(matchWrap(18));
         return c;
@@ -183,11 +193,11 @@ abstract class BaseActivity extends Activity {
     View heading(String s, int diamondColor, View trailing) {
         LinearLayout r = row();
         r.setGravity(Gravity.CENTER_VERTICAL);
-        r.setPadding(0, 0, 0, dp(14));
+        r.setPaddingRelative(0, 0, 0, dp(14));
         r.addView(diamond(diamondColor, 8));
         TextView t = serifText(s, 15, TEXT, true);
         t.setLetterSpacing(0.17f);
-        t.setPadding(dp(10), 0, dp(10), 0);
+        t.setPaddingRelative(dp(10), 0, dp(10), 0);
         r.addView(t);
         View line = new View(this);
         line.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
@@ -202,7 +212,7 @@ abstract class BaseActivity extends Activity {
 
     TextView subtitle(String s) {
         TextView t = text(s, 12, MUTED);
-        t.setPadding(0, 0, 0, dp(14));
+        t.setPaddingRelative(0, 0, 0, dp(14));
         t.setLineSpacing(0, 1.2f);
         return t;
     }
@@ -210,13 +220,13 @@ abstract class BaseActivity extends Activity {
     TextView hint(String s) {
         TextView t = text(s, 12, MUTED);
         t.setLineSpacing(0, 1.2f);
-        t.setPadding(0, dp(8), 0, 0);
+        t.setPaddingRelative(0, dp(8), 0, 0);
         return t;
     }
 
     TextView label(String s) {
         TextView l = text(s, 12, MUTED);
-        l.setPadding(0, 0, 0, dp(6));
+        l.setPaddingRelative(0, 0, 0, dp(6));
         return l;
     }
 
@@ -240,7 +250,7 @@ abstract class BaseActivity extends Activity {
         e.setHighlightColor(0x66C42A3A);
         e.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         e.setBackground(inputBackground());
-        e.setPadding(dp(12), dp(10), dp(12), dp(10));
+        e.setPaddingRelative(dp(12), dp(10), dp(12), dp(10));
         e.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
                 | (multi ? InputType.TYPE_TEXT_FLAG_MULTI_LINE : 0));
         if (multi) {
@@ -279,7 +289,7 @@ abstract class BaseActivity extends Activity {
     /** Placeholder chips that insert themselves at the cursor of the given field. */
     View chips(EditText target, String[] tags) {
         FlowRow row = new FlowRow(this, dp(8));
-        row.setPadding(0, dp(12), 0, 0);
+        row.setPaddingRelative(0, dp(12), 0, 0);
         for (String tag : tags) row.addView(chip(target, tag));
         return row;
     }
@@ -287,7 +297,7 @@ abstract class BaseActivity extends Activity {
     TextView chip(EditText target, String tag) {
         TextView c = text(tag, 12, ACCENT);
         c.setTypeface(Typeface.DEFAULT_BOLD);
-        c.setPadding(dp(12), dp(8), dp(12), dp(8));
+        c.setPaddingRelative(dp(12), dp(8), dp(12), dp(8));
         c.setBackground(rounded(CHIP, 0, 0, dp(999)));
         c.setOnClickListener(v -> {
             if (target == null) return;
@@ -302,14 +312,14 @@ abstract class BaseActivity extends Activity {
     /** Each tag as a tappable chip next to what it becomes. */
     View tagLegend(EditText target, String[] tags, String[] help) {
         LinearLayout l = column();
-        l.setPadding(0, dp(10), 0, 0);
+        l.setPaddingRelative(0, dp(10), 0, 0);
         for (int i = 0; i < tags.length; i++) {
             LinearLayout r = row();
             r.setGravity(Gravity.CENTER_VERTICAL);
             r.setMinimumHeight(dp(44));
             r.addView(chip(target, tags[i]));
             TextView h = text(help[i], 12, MUTED);
-            h.setPadding(dp(10), 0, 0, 0);
+            h.setPaddingRelative(dp(10), 0, 0, 0);
             r.addView(h, weight(1));
             l.addView(r);
         }
@@ -369,7 +379,7 @@ abstract class BaseActivity extends Activity {
         sb.setProgressTintList(ColorStateList.valueOf(CRIMSON));
         sb.setThumbTintList(ColorStateList.valueOf(ACCENT));
         sb.setProgressBackgroundTintList(ColorStateList.valueOf(BORDER_STRONG));
-        sb.setPadding(dp(4), dp(14), dp(4), dp(14));
+        sb.setPaddingRelative(dp(4), dp(14), dp(4), dp(14));
         sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar s, int p, boolean u) { if (u) cb.progress(p); }
             public void onStartTrackingTouch(SeekBar s) {}
@@ -398,10 +408,10 @@ abstract class BaseActivity extends Activity {
             TextView b = text(labels[i] + (subs == null ? "" : "\n" + subs[i]), 14, TEXT);
             b.setGravity(Gravity.CENTER);
             b.setMinHeight(dp(52));
-            b.setPadding(dp(6), dp(6), dp(6), dp(6));
+            b.setPaddingRelative(dp(6), dp(6), dp(6), dp(6));
             b.setTypeface(Typeface.DEFAULT_BOLD);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            if (i > 0) lp.leftMargin = dp(8);
+            if (i > 0) lp.setMarginStart(dp(8));
             b.setLayoutParams(lp);
             buttons.add(b);
             b.setOnClickListener(v -> {
@@ -428,7 +438,7 @@ abstract class BaseActivity extends Activity {
         b.setGravity(Gravity.CENTER);
         b.setMinHeight(dp(44));
         b.setMinWidth(dp(76));
-        b.setPadding(dp(14), 0, dp(14), 0);
+        b.setPaddingRelative(dp(14), 0, dp(14), 0);
         b.setBackground(rounded(0x00000000, BORDER_STRONG, dp(1), dp(10)));
         b.setClickable(true);
         b.setFocusable(true);
@@ -457,7 +467,7 @@ abstract class BaseActivity extends Activity {
 
         TextView tv = text(degrees(Prefs.trigger(prefs, r)), 14, ACCENT);
         LinearLayout tr = valueRow("Trigger tilt", tv);
-        tr.setPadding(0, dp(8), 0, 0);
+        tr.setPaddingRelative(0, dp(8), 0, 0);
         c.addView(tr);
         c.addView(slider(30, Math.round(Prefs.trigger(prefs, r) - 10f), p -> {
             float t = 10f + p;
@@ -494,9 +504,10 @@ abstract class BaseActivity extends Activity {
     View diagram(CellText labels) {
         LinearLayout d = column();
         d.setGravity(Gravity.CENTER_HORIZONTAL);
-        d.setPadding(dp(8), dp(16), dp(8), dp(14));
+        d.setPaddingRelative(dp(8), dp(16), dp(8), dp(14));
         d.setBackground(rounded(BG, BORDER, dp(1), dp(12)));
         d.setLayoutParams(matchWrap(4));
+        d.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);   // left and right are the table's, never mirrored
 
         TextView top = text("SPECTATOR SITS HERE", 11, MUTED);
         centered(top, 0.15f);
@@ -509,7 +520,7 @@ abstract class BaseActivity extends Activity {
         r2.addView(left, weight(1)); r2.addView(phone()); r2.addView(right, weight(1));
         r3.addView(spacer(0, 1), weight(1)); r3.addView(back, weight(1)); r3.addView(spacer(0, 1), weight(1));
         for (LinearLayout rr : new LinearLayout[]{r1, r2, r3}) {
-            rr.setPadding(0, dp(5), 0, dp(5));
+            rr.setPaddingRelative(0, dp(5), 0, dp(5));
             d.addView(rr, matchWrap());
         }
 
@@ -518,7 +529,7 @@ abstract class BaseActivity extends Activity {
         d.addView(bottom);
         TextView key = text("‖ = with a pause", 11, MUTED);
         centered(key, 0f);
-        key.setPadding(0, dp(6), 0, 0);
+        key.setPaddingRelative(0, dp(6), 0, 0);
         d.addView(key);
 
         Runnable fill = () -> {
@@ -535,7 +546,7 @@ abstract class BaseActivity extends Activity {
     private LinearLayout cell() {
         LinearLayout c = column();
         c.setGravity(Gravity.CENTER_HORIZONTAL);
-        c.setPadding(dp(4), dp(8), dp(4), dp(8));
+        c.setPaddingRelative(dp(4), dp(8), dp(4), dp(8));
         LinearLayout.LayoutParams lp = weight(1);
         lp.setMargins(dp(4), 0, dp(4), 0);
         c.setLayoutParams(lp);
@@ -569,7 +580,7 @@ abstract class BaseActivity extends Activity {
     private View phone() {
         LinearLayout p = column();
         p.setGravity(Gravity.CENTER_HORIZONTAL);
-        p.setPadding(0, dp(8), 0, dp(8));
+        p.setPaddingRelative(0, dp(8), 0, dp(8));
         p.setBackground(rounded(CARD, BORDER_STRONG, dp(2), dp(14)));
         // A portrait phone: same width as the side cells' column, taller than wide.
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(132), 1f);
