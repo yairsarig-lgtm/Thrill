@@ -118,6 +118,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         body.addView(expertCard());
         body.addView(vanishCard());
         body.addView(rehearsalCard());
+        body.addView(credits());
 
         setContentView(scroll);
         refreshPreviews();
@@ -154,7 +155,7 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
         name.setShadowLayer(dp(10), 0, 0, 0xCC000000);
         centered(name, 0.35f);
         titles.addView(name);
-        TextView sub = text("מקלדת חיזוי · גרסה עברית 0.14", 12, MUTED);
+        TextView sub = text("מקלדת חיזוי · גרסה עברית 0.15", 12, MUTED);
         centered(sub, 0.04f);
         sub.setPadding(sub.getPaddingLeft(), dp(4), 0, 0);
         titles.addView(sub);
@@ -541,6 +542,64 @@ public class MainActivity extends Activity implements PickupDetector.Listener {
             c.addView(w);
         }
         return c;
+    }
+
+    /**
+     * Credits at the foot of the page. Add collaborators as {role, name} pairs;
+     * the list can be empty.
+     */
+    private static final String[][] COLLABORATORS = {
+            // {"מוגש על ידי", "Name"},
+    };
+
+    private View credits() {
+        LinearLayout c = new LinearLayout(this);
+        c.setOrientation(LinearLayout.VERTICAL);
+        c.setGravity(Gravity.CENTER_HORIZONTAL);
+        c.setPadding(0, dp(36), 0, dp(12));
+
+        LinearLayout orn = row();
+        orn.setGravity(Gravity.CENTER_VERTICAL);
+        View l1 = new View(this);
+        l1.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{0x005A2630, BORDER_STRONG}));
+        orn.addView(l1, new LinearLayout.LayoutParams(dp(70), dp(1)));
+        orn.addView(diamond(CRIMSON, 7));
+        View l2 = new View(this);
+        l2.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{BORDER_STRONG, 0x005A2630}));
+        orn.addView(l2, new LinearLayout.LayoutParams(dp(70), dp(1)));
+        c.addView(orn);
+
+        ImageView mark = new ImageView(this);
+        mark.setImageResource(R.drawable.t_mark);
+        mark.setAlpha(0.55f);
+        mark.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(dp(30), dp(34));
+        mlp.setMargins(0, dp(20), 0, dp(16));
+        c.addView(mark, mlp);
+
+        c.addView(creditLine("נוצר על ידי", "Yair Sarig"));
+        for (String[] collab : COLLABORATORS) c.addView(creditLine(collab[0], collab[1]));
+
+        TextView ver = text("Thrill · גרסה עברית 0.15", 11, 0xFF8E7F7C);
+        ver.setPadding(0, dp(18), 0, 0);
+        c.addView(ver);
+        return c;
+    }
+
+    private View creditLine(String role, String name) {
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        l.setGravity(Gravity.CENTER_HORIZONTAL);
+        l.setPadding(0, dp(6), 0, dp(6));
+        TextView r = text(role, 11, MUTED);
+        r.setLetterSpacing(0.02f);
+        l.addView(r);
+        TextView n = text(name, 18, TEXT);
+        n.setTypeface(title);
+        n.setLetterSpacing(0.08f);
+        n.setPadding(0, dp(4), 0, 0);
+        l.addView(n);
+        return l;
     }
 
     private void refreshPills() {
