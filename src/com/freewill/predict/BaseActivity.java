@@ -49,7 +49,7 @@ abstract class BaseActivity extends Activity {
     static final int GREEN = 0xFF5BBF7A;
     static final int GOLD = 0xFFE8C547;
 
-    static final String VERSION = "v0.16";
+    static final String VERSION = "v0.17";
 
     protected SharedPreferences prefs;
     protected Typeface serif, serifBold;
@@ -506,7 +506,7 @@ abstract class BaseActivity extends Activity {
         r2.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout front = cell(), back = cell(), left = cell(), right = cell();
         r1.addView(spacer(0, 1), weight(1)); r1.addView(front, weight(1)); r1.addView(spacer(0, 1), weight(1));
-        r2.addView(left, weight(1)); r2.addView(phone(), weight(1)); r2.addView(right, weight(1));
+        r2.addView(left, weight(1)); r2.addView(phone()); r2.addView(right, weight(1));
         r3.addView(spacer(0, 1), weight(1)); r3.addView(back, weight(1)); r3.addView(spacer(0, 1), weight(1));
         for (LinearLayout rr : new LinearLayout[]{r1, r2, r3}) {
             rr.setPadding(0, dp(5), 0, dp(5));
@@ -571,15 +571,18 @@ abstract class BaseActivity extends Activity {
         p.setGravity(Gravity.CENTER_HORIZONTAL);
         p.setPadding(0, dp(8), 0, dp(8));
         p.setBackground(rounded(CARD, BORDER_STRONG, dp(2), dp(14)));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(116), 1f);
-        lp.setMargins(dp(10), 0, dp(10), 0);
+        // A portrait phone: same width as the side cells' column, taller than wide.
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(132), 1f);
+        lp.setMargins(dp(12), dp(6), dp(12), dp(6));
         p.setLayoutParams(lp);
         TextView top = text("TOP", 9, FAINT);
-        top.setLetterSpacing(0.1f);
+        centered(top, 0.15f);
         p.addView(top);
         View fill = new View(this);
         p.addView(fill, new LinearLayout.LayoutParams(1, 0, 1f));
-        p.addView(text("face down", 9, FAINT));
+        TextView fd = text("face down", 10, FAINT);
+        centered(fd, 0f);
+        p.addView(fd);
         View fill2 = new View(this);
         p.addView(fill2, new LinearLayout.LayoutParams(1, 0, 1f));
         View bar = new View(this);
