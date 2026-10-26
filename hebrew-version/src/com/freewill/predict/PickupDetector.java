@@ -56,8 +56,8 @@ public class PickupDetector implements SensorEventListener {
 
     public static String edgeName(int edge, boolean paused) {
         switch (edge) {
-            case EDGE_FRONT: return paused ? "קצה קדמי · עצירה" : "קצה קדמי";
-            case EDGE_BACK: return paused ? "קצה אחורי · עצירה" : "קצה אחורי";
+            case EDGE_FRONT: return paused ? "צד קדמי · עצירה" : "צד קדמי";
+            case EDGE_BACK: return paused ? "צד אחורי · עצירה" : "צד אחורי";
             case EDGE_LEFT: return "צד שמאל";
             default: return "צד ימין";
         }
