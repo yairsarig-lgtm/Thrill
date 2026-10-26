@@ -184,6 +184,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         if (ic == null) return;
         ic.commitText(s, 1);
         typed.append(s);
+        applyRoutineSettings();
         // Auto-capitalise the start of each word of the name.
         boolean wantShift = s.equals(" ");
         if (shift != wantShift) { shift = wantShift; refreshCase(); }
@@ -199,6 +200,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
             ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
             ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL));
         }
+        applyRoutineSettings();
         boolean wantShift = typed.length() == 0 || typed.charAt(typed.length() - 1) == ' ';
         if (shift != wantShift) { shift = wantShift; refreshCase(); }
     }
@@ -242,8 +244,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         fired = false;
         updateDot(false);
         keepScreenOn(true);
-        detector.setTrigger(Prefs.trigger(Prefs.get(this)));
-        detector.setPauseMs(Prefs.pauseMs(Prefs.get(this)));
+        applyRoutineSettings();
         detector.start();
     }
 
@@ -291,7 +292,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
     public void onArmed() {
         main.post(() -> {
             updateDot(true);
-            if (Prefs.get(this).getBoolean(Prefs.VIBRATE, true)) {
+            if (Prefs.vibrate(Prefs.get(this), currentRoutine())) {
                 Haptics.armedTap(this);
             }
         });
@@ -304,11 +305,10 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
 
     @Override
     public void onPaused() {
-        // Lets the performer feel that the pause has registered (routine 2 only).
+        // Lets the performer feel that the pause has registered (edge routines only).
         main.post(() -> {
-            if (Prefs.get(this).getBoolean(Prefs.VIBRATE, true) && parseRoutine(typed.toString()) == 2) {
-                Haptics.armedTap(this);
-            }
+            int r = currentRoutine();
+            if (r != Routines.NORMAL && Prefs.vibrate(Prefs.get(this), r)) Haptics.armedTap(this);
         });
     }
 
@@ -317,26 +317,18 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         main.post(() -> reveal(pk));
     }
 
-    /** "Noa", "Noa1" or "Noa 1" = routine 1; "Noa2" = routine 2. Unknown numbers fall back to 1. */
-    static int parseRoutine(String typed) {
-        java.util.regex.Matcher m = TRAILING_NUMBER.matcher(typed);
-        if (!m.matches()) return 1;
-        try {
-            int r = Integer.parseInt(m.group(2));
-            return (r == 1 || r == 2) ? r : 1;
-        } catch (NumberFormatException e) {
-            return 1;
-        }
+    /** The routine chosen by the number typed after the name. */
+    private int currentRoutine() {
+        return Routines.routineFor(Prefs.get(this), typed.toString());
     }
 
-    /** The name without the routine number. */
-    static String stripRoutine(String typed) {
-        java.util.regex.Matcher m = TRAILING_NUMBER.matcher(typed);
-        return m.matches() ? m.group(1) : typed;
+    /** Trigger angle and pause length follow the routine being typed. */
+    private void applyRoutineSettings() {
+        SharedPreferences p = Prefs.get(this);
+        int r = currentRoutine();
+        detector.setTrigger(Prefs.trigger(p, r));
+        detector.setPauseMs(Prefs.pauseMs(p, r));
     }
-
-    private static final java.util.regex.Pattern TRAILING_NUMBER =
-            java.util.regex.Pattern.compile("^(.*?)\\s*(\\d+)\\s*$", java.util.regex.Pattern.DOTALL);
 
     private void reveal(PickupDetector.Pickup pk) {
         if (fired) return;
@@ -347,8 +339,8 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
 
         SharedPreferences p = Prefs.get(this);
         String raw = typed.toString();
-        int routine = parseRoutine(raw);
-        String prediction = Prefs.build(p, routine, pk, stripRoutine(raw));
+        int routine = Routines.routineFor(p, raw);
+        String prediction = Routines.build(p, routine, pk, Routines.nameFor(raw));
 
         ic.beginBatchEdit();
         if (typed.length() > 0) ic.deleteSurroundingText(typed.length(), 0);
@@ -357,7 +349,7 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         typed.setLength(0);
         updateDot(false);
 
-        int after = p.getInt(Prefs.AFTER, 0);
+        int after = Prefs.after(p, routine);
         main.postDelayed(() -> {
             if (after == 0) {
                 if (!goBack()) requestHideSelf(0);

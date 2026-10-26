@@ -21,21 +21,27 @@ Old `{first}`/`{obj1}`-style text is converted automatically.
 
 ## Routines
 
-Type the routine number straight after the name; it is removed before the prediction is written.
+The home page lists every routine; each has its own page with its own players, prophecy,
+reveal diagram, vanish settings and rehearsal. Type the routine number straight after the
+name (it is removed before the prediction is written). No number, or a number with no
+routine behind it, runs routine I.
 
-- **Normal reveal** (`Noa` or `Noa1`): Object 3 is forced; whoever picks the phone up gets Object 1, the other person Object 2.
-- **Expert reveal** (`Noa2`): no force. The edge that rises first (seen from the magician's seat), plus an optional pause, picks one of six arrangements:
-
-| Lift | Spectator's object | Magician's object | Remaining object |
+| # | Routine | Outcomes | Pickups |
 |---|---|---|---|
-| Front | obj1 | obj2 | obj3 |
-| Front + pause | obj1 | obj3 | obj2 |
-| Back | obj2 | obj1 | obj3 |
-| Back + pause | obj3 | obj1 | obj2 |
-| Right | obj3 | obj2 | obj1 |
-| Left | obj2 | obj3 | obj1 |
+| I | The Normal Reveal (`Noa`, `Noa1`) | 2 | who picks the phone up |
+| II | The Expert Reveal (`Noa2`) | 6 | front, front‖, back, back‖, right, left |
+| III | The Eight (`Noa3`) | 8 | every edge, with and without a pause; prophecy or mental force |
+| IV | Die Roll (`Noa4`) | 6 | 1–2 front, 3–4 back, 5 left, 6 right |
+| V | ESP Symbols (`Noa5`) | 5 | by number of lines, clockwise: front, right, back, left, front‖ |
+| VI | Coin Flips (`Noa6`) | 2 / 4 / 8 | 1st flip H = front/back, T = side; 2nd H = front/left, T = back/right; 3rd T = pause |
+| VII+ | Build It Yourself (`Noa7`, `Noa8`, …) | 2–8 | you assign each outcome to a pickup |
 
-The pause is made early in the lift: raise the edge slightly, hold still for the pause length, 0.2–1.0 s (a silent tap confirms it), then finish the pickup.
+‖ = lift slightly, hold still until the silent tap (0.2–1.0 s), then finish the pickup.
+Pickups are named as seen from the magician's seat, phone face down with its bottom toward the magician.
+
+Settings are stored per routine (`r{n}_*` keys in `Prefs`); settings from v0.15 and earlier
+carry over automatically. Deleting a custom routine asks whether to keep the numbers or
+close the gaps.
 
 ## Hebrew tester build
 
@@ -46,8 +52,11 @@ The pause is made early in the lift: raise the edge slightly, hold still for the
 - `src/com/freewill/predict/`
   - `PredictionKeyboard.java` — the keyboard (input method) that injects the prediction
   - `PickupDetector.java` — gravity + rotation-vector logic for arming and pickup detection
-  - `MainActivity.java` — settings and rehearsal screen
-  - `Prefs.java` — settings and prediction building
+  - `HomeActivity.java` — home: keyboard status, routine deck, rehearsal, credits
+  - `RoutineActivity.java` — one routine's page (and the Build It Yourself editor)
+  - `Routines.java` — routine catalogue and prediction building
+  - `RehearsalCard.java`, `BaseActivity.java`, `SymbolView.java` — shared UI
+  - `Prefs.java` — per-routine settings storage
 - `res/`, `assets/fonts/` — icon, hero images, Cinzel font
 - `design/` — logo and icon source images
 - `build.sh`, `tools/` — Gradle-free build: aapt2 → javac → d8 → align + APK Signature Scheme v2
