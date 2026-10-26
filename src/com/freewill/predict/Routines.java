@@ -659,6 +659,11 @@ public final class Routines {
         e.commit();
     }
 
+    /** The idea a custom routine was started from, or "" if none. */
+    public static String ideaInUse(SharedPreferences p, int r) {
+        return Prefs.raw(p, r, "idea", "");
+    }
+
     /** Fills a custom routine from an idea, overwriting its outcomes and prophecy. */
     public static void applyIdea(SharedPreferences p, int r, Idea idea) {
         SharedPreferences.Editor e = p.edit();
@@ -675,6 +680,7 @@ public final class Routines {
             }
         }
         e.putString(Prefs.k(r, "template"), idea.template);
+        e.putString(Prefs.k(r, "idea"), idea.name);
         e.commit();
     }
 }

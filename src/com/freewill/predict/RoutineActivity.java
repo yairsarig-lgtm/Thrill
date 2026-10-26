@@ -574,14 +574,27 @@ public class RoutineActivity extends BaseActivity {
         c.setBackground(g);
         c.addView(heading("IDEAS", GOLD, null));
         c.addView(subtitle("Optional. Nothing is filled in until you tap an idea; then it sets up the outcomes and prophecy for you to edit."));
+        String inUse = Routines.ideaInUse(prefs, r);
         for (Routines.Idea idea : Routines.IDEAS) {
+            boolean on = idea.name.equals(inUse);
             LinearLayout box = column();
             box.setPadding(dp(14), dp(12), dp(14), dp(12));
-            box.setBackground(rounded(BG, BORDER, dp(1), dp(10)));
+            box.setBackground(on ? rounded(0xFF2A1217, CRIMSON, dp(2), dp(10)) : rounded(BG, BORDER, dp(1), dp(10)));
             box.setLayoutParams(matchWrap(10));
             box.setClickable(true);
             box.setFocusable(true);
-            box.addView(serifText(idea.name, 14, TEXT, true));
+            LinearLayout titleRow = row();
+            titleRow.setGravity(Gravity.CENTER_VERTICAL);
+            titleRow.addView(serifText(idea.name, 14, TEXT, true), weight(1));
+            if (on) {
+                TextView badge = text("IN USE", 10, 0xFFFFFFFF);
+                badge.setTypeface(Typeface.DEFAULT_BOLD);
+                badge.setLetterSpacing(0.12f);
+                badge.setPadding(dp(8), dp(3), dp(8), dp(3));
+                badge.setBackground(rounded(CRIMSON, 0, 0, dp(999)));
+                titleRow.addView(badge);
+            }
+            box.addView(titleRow, matchWrap());
             TextView d = text(idea.description, 12, MUTED);
             d.setLineSpacing(0, 1.2f);
             d.setPadding(0, dp(4), 0, 0);
@@ -623,18 +636,39 @@ public class RoutineActivity extends BaseActivity {
         c.addView(t);
         List<int[]> plan = Routines.renumberPlan(prefs, r);
         TextView m = text(plan.isEmpty()
-                ? "Routine " + Routines.roman(r) + " will be removed."
+                ? "Routine " + Routines.roman(r) + " will be removed. This can't be undone."
                 : "Routine " + Routines.roman(r) + " will be removed. What should happen to the numbers after it?", 13, MUTED);
         m.setLineSpacing(0, 1.25f);
         m.setPadding(0, dp(10), 0, dp(6));
         c.addView(m);
 
         if (plan.isEmpty()) {
-            c.addView(dialogOption("Delete", "No other routine changes number.", null, () -> {
+            // Nothing to renumber: a plain confirm with Cancel and Delete side by side.
+            LinearLayout buttons = row();
+            buttons.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+            buttons.setPadding(0, dp(14), 0, 0);
+            TextView no = text("Cancel", 14, MUTED);
+            no.setGravity(Gravity.CENTER);
+            no.setMinHeight(dp(44));
+            no.setPadding(dp(16), 0, dp(16), 0);
+            no.setOnClickListener(v -> dlg.dismiss());
+            buttons.addView(no);
+            TextView yes = text("Delete", 14, 0xFFFFFFFF);
+            yes.setTypeface(Typeface.DEFAULT_BOLD);
+            yes.setGravity(Gravity.CENTER);
+            yes.setMinHeight(dp(44));
+            yes.setPadding(dp(22), 0, dp(22), 0);
+            yes.setBackground(rounded(CRIMSON, 0, 0, dp(10)));
+            yes.setOnClickListener(v -> {
                 Routines.deleteCustom(prefs, r, false);
                 dlg.dismiss();
                 finish();
-            }));
+            });
+            LinearLayout.LayoutParams ylp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            ylp.leftMargin = dp(8);
+            buttons.addView(yes, ylp);
+            c.addView(buttons, matchWrap());
         } else {
             c.addView(dialogOption("Keep numbers",
                     "Nothing else changes. " + r + " stays empty until you build a new routine.", null, () -> {
@@ -653,11 +687,13 @@ public class RoutineActivity extends BaseActivity {
                 finish();
             }));
         }
-        TextView cancel = text("Cancel", 14, MUTED);
-        cancel.setGravity(Gravity.CENTER);
-        cancel.setMinHeight(dp(44));
-        cancel.setOnClickListener(v -> dlg.dismiss());
-        c.addView(cancel, matchWrap(6));
+        if (!plan.isEmpty()) {
+            TextView cancel = text("Cancel", 14, MUTED);
+            cancel.setGravity(Gravity.CENTER);
+            cancel.setMinHeight(dp(44));
+            cancel.setOnClickListener(v -> dlg.dismiss());
+            c.addView(cancel, matchWrap(6));
+        }
 
         dlg.setContentView(c);
         Window w = dlg.getWindow();
