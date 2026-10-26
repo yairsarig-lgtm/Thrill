@@ -255,13 +255,15 @@ public class HomeActivity extends BaseActivity {
         orn.addView(l2, new LinearLayout.LayoutParams(0, dp(1), 1f));
         c.addView(orn, matchWrap());
 
+        // Both columns hang from the same top line, so the labels and the first line of each
+        // name sit level even when one name wraps.
         LinearLayout pair = row();
-        pair.setGravity(Gravity.CENTER_VERTICAL);
+        pair.setGravity(Gravity.TOP);
         pair.setPadding(0, dp(24), 0, dp(22));
         pair.addView(creditColumn("CREATED BY", "Yair Sarig"), weight(1));
         View divider = new View(this);
         divider.setBackgroundColor(BORDER);
-        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(dp(1), dp(54));
+        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(dp(1), dp(58));
         dlp.setMargins(dp(14), 0, dp(14), 0);
         pair.addView(divider, dlp);
         pair.addView(creditColumn("PRESENTED BY", "The Daily Magician"), weight(1));

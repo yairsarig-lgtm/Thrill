@@ -49,7 +49,7 @@ abstract class BaseActivity extends Activity {
     static final int GREEN = 0xFF5BBF7A;
     static final int GOLD = 0xFFE8C547;
 
-    static final String VERSION = "v0.18";
+    static final String VERSION = "v0.19";
 
     protected SharedPreferences prefs;
     protected Typeface serif, serifBold;

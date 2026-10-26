@@ -69,7 +69,7 @@ class RehearsalCard implements PickupDetector.Listener {
 
         if (withPicker) {
             pickerHolder = a.column();
-            pickerHolder.setPadding(0, a.dp(12), 0, 0);
+            pickerHolder.setPadding(0, a.dp(22), 0, 0);
             c.addView(pickerHolder, a.matchWrap());
             rebuildPicker();
         }
@@ -79,7 +79,7 @@ class RehearsalCard implements PickupDetector.Listener {
         mark.setAlpha(0.9f);
         mark.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(a.dp(54), a.dp(62));
-        mlp.setMargins(0, a.dp(16), 0, a.dp(10));
+        mlp.setMargins(0, a.dp(withPicker ? 30 : 18), 0, a.dp(18));
         c.addView(mark, mlp);
 
         phase = a.serifText("", 24, BaseActivity.ACCENT, true);
