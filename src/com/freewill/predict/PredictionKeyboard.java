@@ -69,6 +69,13 @@ public class PredictionKeyboard extends InputMethodService implements PickupDete
         root.setBackgroundColor(bg);
         int p = dp(4);
         root.setPadding(p, dp(8), p, dp(10));
+        // On Android 15+ the keyboard may sit behind the gesture bar; lift the keys above it.
+        final int basePad = dp(10);
+        root.setOnApplyWindowInsetsListener((view, in) -> {
+            view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(),
+                    basePad + in.getSystemWindowInsetBottom());
+            return in;
+        });
         root.setLayoutDirection(View.LAYOUT_DIRECTION_LTR); // keys keep their physical order
 
         // Number row

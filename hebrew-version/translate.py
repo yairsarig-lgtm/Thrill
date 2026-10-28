@@ -26,9 +26,6 @@ def copy_tree():
         shutil.copytree(os.path.join(ROOT, d), dst)
     shutil.copy(os.path.join(HERE, "fonts", "frl-medium.ttf"), os.path.join(HERE, "assets/fonts"))
     shutil.copy(os.path.join(HERE, "fonts", "frl-bold.ttf"), os.path.join(HERE, "assets/fonts"))
-    os.makedirs(os.path.join(HERE, "tools"), exist_ok=True)
-    for t in ("StripParams.java", "pack_sign.py"):
-        shutil.copy(os.path.join(ROOT, "tools", t), os.path.join(HERE, "tools", t))
 
 
 # ------------------------------------------------------------------ translations
@@ -447,7 +444,8 @@ def patch_sources():
 def write_manifest():
     with open(os.path.join(ROOT, "AndroidManifest.xml"), encoding="utf-8") as f:
         m = f.read()
-    m = m.replace('package="com.freewill.predict"', 'package="com.freewill.predict.he"')
+    assert 'package="com.dailymagician.thrill"' in m
+    m = m.replace('package="com.dailymagician.thrill"', 'package="com.dailymagician.thrill.he"')
     m = m.replace('android:label="Thrill"', 'android:label="Thrill עברית"')
     m = m.replace('android:icon="@mipmap/ic_launcher"',
                   'android:icon="@mipmap/ic_launcher"\n        android:supportsRtl="true"')

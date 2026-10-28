@@ -63,7 +63,7 @@ close the gaps.
 
 ## Building
 
-`build.sh` expects a tools folder (`TOOLS=...`) containing `aapt2`, `android.jar` (API 29+), `d8.jar` with its dependency jars in `lib/`, plus Python 3 with `cryptography`. It writes `FreeWill.apk`.
+`build.sh [dir] [name]` builds a sideload APK and, with keystore.properties + the upload key present, a signed Play bundle (.aab). Tools: aapt2, SDK android-36.jar, d8 + lib jars, bundletool, Python 3 with cryptography. Output: Thrill.apk and Thrill.aab.
 
 Signing uses `signing-key.pem` in the project folder (created automatically on first build). **It is not committed.** Keep your own copy safe: updates only install over an existing install when signed with the same key.
 

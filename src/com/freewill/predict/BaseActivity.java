@@ -49,7 +49,7 @@ abstract class BaseActivity extends Activity {
     static final int GREEN = 0xFF5BBF7A;
     static final int GOLD = 0xFFE8C547;
 
-    static final String VERSION = "v0.19";
+    static final String VERSION = "v1.0";
 
     protected SharedPreferences prefs;
     protected Typeface serif, serifBold;
@@ -76,6 +76,21 @@ abstract class BaseActivity extends Activity {
             serifBold = Typeface.create(Typeface.SERIF, Typeface.BOLD);
             logo = serifBold;
         }
+    }
+
+    /**
+     * Android 15+ draws every app edge to edge. Keep the page clear of the status bar,
+     * the navigation bar and the on-screen keyboard (whose height arrives in the same insets).
+     */
+    @Override
+    public void setContentView(View v) {
+        super.setContentView(v);
+        v.setOnApplyWindowInsetsListener((view, in) -> {
+            view.setPadding(in.getSystemWindowInsetLeft(), in.getSystemWindowInsetTop(),
+                    in.getSystemWindowInsetRight(), in.getSystemWindowInsetBottom());
+            return in.consumeSystemWindowInsets();
+        });
+        v.requestApplyInsets();
     }
 
     void refreshAll() {

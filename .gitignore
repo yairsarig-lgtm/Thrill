@@ -2,3 +2,7 @@ out/
 *.apk
 *.apk.unsigned
 signing-key.pem
+*.jks
+keystore.properties
+*.aab
+play/private/
